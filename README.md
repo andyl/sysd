@@ -1,7 +1,7 @@
 # Ziprel
 
-Ziprel Mix tasks are for deploying Elixir Releases to bare metal servers over
-SSH. Ziprel provides a minimalist deployment workflow targeting LAN/internal
+Ziprel Tasks are for deploying Elixir Releases to bare metal servers over SSH.
+Ziprel provides a minimalist deployment workflow targeting LAN/internal
 environments, using YAML configuration, SSHex for SSH connectivity, and systemd
 for service management.
 
