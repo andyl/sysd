@@ -1,33 +1,52 @@
 defmodule Ziprel.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.0.1"
+
   def project do
     [
       app: :ziprel,
       version: @version,
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
+      licenses: ["MIT"],
+      docs: docs(),
+      package: [
+        name: "ziprel",
+        licenses: ["MIT"],
+        links: %{
+          "GitHub" => "https://github.com/andyl/commit_hook",
+          "Docs" => "https://hexdocs.pm/commit_hook"
+        },
+        files: ~w(lib priv mix.exs README.md CHANGELOG.md LICENSE)
+      ],
       deps: deps()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  defp docs do
+    [
+      main: "readme",
+      extras: [{"README.md", title: "Overview"}],
+      source_url: "https://github.com/andyl/ziprel",
+      source_ref: "v#{@version}"
+    ]
+  end
+
   defp deps do
     [
       {:sshex, "~> 2.0"},
-      {:git_ops, "~> 2.0", only: [:dev], runtime: false},
       {:commit_hook, "~> 0.4"},
-      {:igniter, "~> 0.6", only: [:dev, :test]}
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:igniter, "~> 0.6", only: [:dev, :test]},
+      {:git_ops, "~> 2.0", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.37", only: :dev, runtime: false}
     ]
   end
+
 end
