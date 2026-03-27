@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## v0.0.2 (2026-03-27)
+
+
+
+
+### Bug Fixes:
+
+* remove priv by andyl
+
 ## v0.0.1 (2026-03-27)
 
 
