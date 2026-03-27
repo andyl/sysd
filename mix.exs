@@ -22,6 +22,7 @@ defmodule Ziprel.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:sshex, "~> 2.0"},
       {:git_ops, "~> 2.0", only: [:dev], runtime: false},
       {:commit_hook, "~> 0.4"},
       {:igniter, "~> 0.6", only: [:dev, :test]}
