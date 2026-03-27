@@ -1,0 +1,15 @@
+[Unit]
+Description=<%= app_name %>
+After=network.target
+
+[Service]
+Type=simple
+User=<%= user %>
+Environment=PHX_SERVER=true
+ExecStart=/opt/ziprel/current/bin/<%= app_name %> start
+ExecStop=/opt/ziprel/current/bin/<%= app_name %> stop
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
