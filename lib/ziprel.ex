@@ -1,7 +1,5 @@
 defmodule Ziprel do
-  @moduledoc """
-  Documentation for `Ziprel`.
-  """
+  @moduledoc false
 
   @doc """
   Hello world.
