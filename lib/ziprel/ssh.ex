@@ -65,6 +65,7 @@ defmodule Ziprel.SSH do
 
     case :ssh_sftp.write_file(channel, to_charlist(remote_path), content) do
       :ok ->
+        IO.puts("Upload successful")
         :ssh_sftp.stop_channel(channel)
         :ok
 
