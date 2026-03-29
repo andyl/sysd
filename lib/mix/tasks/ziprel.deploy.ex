@@ -32,6 +32,9 @@ defmodule Mix.Tasks.Ziprel.Deploy do
     version = Ziprel.version()
 
     Mix.shell().info("Building release #{app_name} #{version}...")
+    Mix.shell().info("running `mix assets.deploy`...")
+    Mix.Task.run("assets.deploy", [])
+    Mix.shell().info("running `mix release`...")
     Mix.Task.run("release", [])
 
     tar_path = Ziprel.release_tar_path()
