@@ -31,7 +31,9 @@ defmodule Ziprel.Remote do
     remote_archive = "#{Ziprel.archives_path()}/#{version}.tar.gz"
     remote_release = "#{Ziprel.releases_path()}/#{version}"
 
-    SSH.upload(conn, local_tar_path, remote_archive)
+    tmp_archive = "/tmp/#{app_name}-#{version}.tar.gz"
+    SSH.upload(conn, local_tar_path, tmp_archive)
+    SSH.run!(conn, "sudo mv #{tmp_archive} #{remote_archive}")
 
     SSH.run!(conn, "sudo mkdir -p #{remote_release}")
     SSH.run!(conn, "sudo tar -xzf #{remote_archive} -C #{remote_release}")

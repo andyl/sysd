@@ -42,6 +42,6 @@ defmodule Ziprel do
   def release_tar_path do
     app = app_name()
     ver = version()
-    Path.join([Mix.Project.build_path(), "rel", to_string(app), "#{app}-#{ver}.tar.gz"])
+    Path.join([Mix.Project.build_path(), "#{app}-#{ver}.tar.gz"])
   end
 end
