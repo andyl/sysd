@@ -27,6 +27,7 @@ defmodule Mix.Tasks.Ziprel.Init do
     app_name = Ziprel.app_name()
     config_path = Ziprel.Config.config_path()
     service_path = "priv/ziprel/#{app_name}.service"
+    user_name = System.get_env("USER")
 
     if File.exists?(config_path) do
       Mix.shell().info("Config already exists: #{config_path}")
@@ -35,7 +36,7 @@ defmodule Mix.Tasks.Ziprel.Init do
       servers:
         - host1
       ssh:
-        user: deploy
+        user: #{user_name}
       """
 
       File.mkdir_p!(Path.dirname(config_path))
@@ -51,7 +52,7 @@ defmodule Mix.Tasks.Ziprel.Init do
         |> :code.priv_dir()
         |> Path.join("ziprel/templates/app.service.eex")
 
-      content = EEx.eval_file(template_path, app_name: app_name, user: "deploy")
+      content = EEx.eval_file(template_path, app_name: app_name, user: user_name)
 
       File.mkdir_p!(Path.dirname(service_path))
       File.write!(service_path, content)
