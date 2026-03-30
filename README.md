@@ -27,7 +27,7 @@ by adding `ziprel` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ziprel, "~> 0.1.0"}
+    {:ziprel, "~> 0.2.0"}
   ]
 end
 ```
