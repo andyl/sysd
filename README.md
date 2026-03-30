@@ -45,13 +45,13 @@ Generate starter configuration files in the consumer project:
 Validate SSH connectivity and permissions on all configured servers:
 - Test SSH connection to each server
 - Verify the deploy user has sudo access
-- Verify the deploy user can create `/opt/ziprel`
+- Verify the deploy user can create `/opt/ziprel/<appname>`
 
 ### ziprel.setup
 
 Perform first-time server setup and initial deploy for each server:
 - Create the systemd service file at `/etc/systemd/services/<appname>.service`
-- Create the `/opt/ziprel` directory structure
+- Create the `/opt/ziprel/<appname>` directory structure
 - Run the deploy workflow (see ziprel.deploy)
 
 ### ziprel.deploy
@@ -59,20 +59,20 @@ Perform first-time server setup and initial deploy for each server:
 Build a release and deploy it to all configured servers:
 - Generate a new release with `MIX_ENV=prod mix release`
 - For each server:
-  - Copy the tar file to `/opt/ziprel/archives/<version>.tar`
-  - Extract the release to `/opt/ziprel/releases/<version>`
-  - Update the symlink `/opt/ziprel/current` to point to the new release
+  - Copy the tar file to `/opt/ziprel/<appname>/archives/<version>.tar`
+  - Extract the release to `/opt/ziprel/<appname>/releases/<version>`
+  - Update the symlink `/opt/ziprel/<appname>/current` to point to the new release
   - Start or restart the systemd service
 
 ### ziprel.versions
 
-List deployed release versions on each configured server by reading `/opt/ziprel/releases`.
+List deployed release versions on each configured server by reading `/opt/ziprel/<appname>/releases`.
 
 ### ziprel.rollback
 
 Roll back to a previous release version on all servers:
 - Accept a version argument
-- Update the symlink `/opt/ziprel/current` to point to the specified version
+- Update the symlink `/opt/ziprel/<appname>/current` to point to the specified version
 - Restart the systemd service
 
 ### ziprel.remove
@@ -80,14 +80,14 @@ Roll back to a previous release version on all servers:
 Remove an old release version from all servers:
 - Accept a version argument
 - Refuse to remove the currently active version
-- Remove `/opt/ziprel/releases/<version>` and `/opt/ziprel/archives/<version>.tar`
+- Remove `/opt/ziprel/<appname>/releases/<version>` and `/opt/ziprel/<appname>/archives/<version>.tar`
 
 ### ziprel.cleanup
 
 Fully remove Ziprel from a specific server:
 - Remove the server entry from `config/ziprel.yaml`
 - Remove the systemd service file
-- Remove the `/opt/ziprel` directory
+- Remove the `/opt/ziprel/<appname>` directory
 
 ## Configuration
 
@@ -104,8 +104,11 @@ ssh:
 ## Remote Server Layout
 
 ```
-/opt/ziprel/
+/opt/ziprel/<appname>/
   archives/<version>.tar
   releases/<version>/
   current -> releases/<version>
 ```
+
+Each application gets its own subdirectory under `/opt/ziprel/`, allowing
+multiple apps to be deployed on the same server.

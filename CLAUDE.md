@@ -28,7 +28,7 @@ The project is structured as a Mix library that exposes Mix tasks (`mix ziprel.*
 
 Planned Mix tasks (see `_spec/designs/260327_DesignOverview.md`): `ziprel.init`, `ziprel.sshcheck`, `ziprel.setup`, `ziprel.deploy`, `ziprel.versions`, `ziprel.rollback`, `ziprel.remove`, `ziprel.cleanup`.
 
-Mix tasks should live under `lib/mix/tasks/ziprel.*.ex`. Config is YAML-based at `config/ziprel.yaml` in consumer projects. Remote server layout uses `/opt/ziprel/{archives,releases,current}`.
+Mix tasks should live under `lib/mix/tasks/ziprel.*.ex`. Config is YAML-based at `config/ziprel.yaml` in consumer projects. Remote server layout uses `/opt/ziprel/<appname>/{archives,releases,current}`.
 
 ## Git Commits
 

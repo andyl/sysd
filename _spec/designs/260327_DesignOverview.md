@@ -80,22 +80,22 @@ for each server:
 - generate a new release `MIX_ENV=prod mix release`
 
 for each server:
-- copy the tar file to the remote server /opt/ziprel/archives/<version>.tar 
-- untar the release file into /opt/ziprel/releases/<version>
-- set the symlink /opt/ziprel/current to point to /opt/ziprel/releases/<version>
+- copy the tar file to the remote server /opt/ziprel/<appname>/archives/<version>.tar 
+- untar the release file into /opt/ziprel/<appname>/releases/<version>
+- set the symlink /opt/ziprel/<appname>/current to point to /opt/ziprel/<appname>/releases/<version>
 - start or restart the service `sudo systemctl <appname> start`
 
 **ziprel.versions** 
 
 for each server: 
-- ls /opt/ziprel/releases 
+- ls /opt/ziprel/<appname>/releases 
 
 **ziprel.rollback**
 
 get the <version> number
 
 for each server:
-- set the symlink /opt/ziprel/current to point to /opt/ziprel/releases/<version>
+- set the symlink /opt/ziprel/<appname>/current to point to /opt/ziprel/<appname>/releases/<version>
 - restart the service `system systemctl <appname> restart`
 
 **ziprel.remove** 
@@ -104,13 +104,13 @@ get the <version> number
 do not remove current version
 
 for each server:
-- remove /opt/ziprel/releases/<version>
-- remove /opt/ziprel/archives/<version>.tar 
+- remove /opt/ziprel/<appname>/releases/<version>
+- remove /opt/ziprel/<appname>/archives/<version>.tar 
 
 **ziprel.cleanup**
 
 for <server>:
 - remove server from config/ziprel.yaml 
 - remove service file 
-- remove /opt/ziprel
+- remove /opt/ziprel/<appname>
 

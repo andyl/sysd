@@ -11,9 +11,9 @@ defmodule Mix.Tasks.Ziprel.Deploy do
     1. Build a production release with `MIX_ENV=prod mix release`
     2. Locate the release tarball in `_build/prod/rel/`
     3. For each server in `config/ziprel.yaml`:
-       - Upload the tarball to `/opt/ziprel/archives/<version>.tar.gz`
-       - Extract it to `/opt/ziprel/releases/<version>/`
-       - Update the `/opt/ziprel/current` symlink to the new version
+       - Upload the tarball to `/opt/ziprel/<appname>/archives/<version>.tar.gz`
+       - Extract it to `/opt/ziprel/<appname>/releases/<version>/`
+       - Update the `/opt/ziprel/<appname>/current` symlink to the new version
        - Start or restart the systemd service
 
   The service will be briefly offline during the deploy.

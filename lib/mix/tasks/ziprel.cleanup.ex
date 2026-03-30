@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Ziprel.Cleanup do
 
     1. Stop and disable the systemd service
     2. Remove the service file from `/etc/systemd/system/`
-    3. Delete the entire `/opt/ziprel/` directory
+    3. Delete the `/opt/ziprel/<appname>/` directory
     4. Remove the server entry from `config/ziprel.yaml`
 
   This is a destructive operation. The server must be listed in

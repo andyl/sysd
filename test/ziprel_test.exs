@@ -17,8 +17,9 @@ defmodule ZiprelTest do
 
   test "path helpers return expected paths" do
     assert Ziprel.base_path() == "/opt/ziprel"
-    assert Ziprel.archives_path() == "/opt/ziprel/archives"
-    assert Ziprel.releases_path() == "/opt/ziprel/releases"
-    assert Ziprel.current_path() == "/opt/ziprel/current"
+    assert Ziprel.app_path(:myapp) == "/opt/ziprel/myapp"
+    assert Ziprel.archives_path(:myapp) == "/opt/ziprel/myapp/archives"
+    assert Ziprel.releases_path(:myapp) == "/opt/ziprel/myapp/releases"
+    assert Ziprel.current_path(:myapp) == "/opt/ziprel/myapp/current"
   end
 end

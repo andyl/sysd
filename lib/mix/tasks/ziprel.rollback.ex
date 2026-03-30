@@ -8,8 +8,8 @@ defmodule Mix.Tasks.Ziprel.Rollback do
 
   For each server in `config/ziprel.yaml`, this task will:
 
-    1. Update the `/opt/ziprel/current` symlink to point to
-       `/opt/ziprel/releases/<VERSION>`
+    1. Update the `/opt/ziprel/<appname>/current` symlink to point to
+       `/opt/ziprel/<appname>/releases/<VERSION>`
     2. Restart the systemd service
 
   The target version must already exist on the server. Use

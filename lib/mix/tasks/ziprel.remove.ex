@@ -8,8 +8,8 @@ defmodule Mix.Tasks.Ziprel.Remove do
 
   For each server in `config/ziprel.yaml`, this task will delete:
 
-    * `/opt/ziprel/releases/<VERSION>/`
-    * `/opt/ziprel/archives/<VERSION>.tar.gz`
+    * `/opt/ziprel/<appname>/releases/<VERSION>/`
+    * `/opt/ziprel/<appname>/archives/<VERSION>.tar.gz`
 
   The currently active version cannot be removed. Use
   `mix ziprel.versions` to check which version is current, and
@@ -25,11 +25,13 @@ defmodule Mix.Tasks.Ziprel.Remove do
       [version] ->
         config = Config.load()
 
+        app_name = Ziprel.app_name()
+
         Enum.each(config.servers, fn server ->
           Mix.shell().info("Removing #{version} from #{server}...")
 
           {:ok, conn} = SSH.connect(server, config.ssh)
-          Remote.remove_version(conn, version)
+          Remote.remove_version(conn, app_name, version)
 
           Mix.shell().info("  Removed successfully")
         end)

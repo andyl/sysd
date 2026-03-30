@@ -16,7 +16,7 @@ Implement the full set of Ziprel Mix tasks (`ziprel`, `ziprel.init`, `ziprel.ssh
 - YAML config parsing (`config/ziprel.yaml`)
 - EEX-based systemd service template generation
 - SSH connectivity via SSHEx and Erlang `:ssh_sftp` for file transfer
-- Remote directory management under `/opt/ziprel/`
+- Remote directory management under `/opt/ziprel/<appname>/`
 - Symlink-based version switching
 - Systemd service management via `sudo systemctl`
 
@@ -68,18 +68,18 @@ Implement the full set of Ziprel Mix tasks (`ziprel`, `ziprel.init`, `ziprel.ssh
 
 4. **Create `Ziprel.Remote` module**
    - Files: `lib/ziprel/remote.ex`
-   - `setup_dirs/1` — creates `/opt/ziprel/{archives,releases}` on a connected server
+   - `setup_dirs/2` — creates `/opt/ziprel/<appname>/{archives,releases}` on a connected server
    - `install_service/3` — writes the systemd service file to `/etc/systemd/services/<appname>.service` via sudo
    - `deploy/3` — uploads tar, extracts to releases dir, updates symlink, starts/restarts service
-   - `list_versions/1` — `ls /opt/ziprel/releases` and returns list
-   - `current_version/1` — `readlink /opt/ziprel/current` and extracts version
+   - `list_versions/2` — `ls /opt/ziprel/<appname>/releases` and returns list
+   - `current_version/2` — `readlink /opt/ziprel/<appname>/current` and extracts version
    - `rollback/2` — updates symlink and restarts service
    - `remove_version/2` — removes release and archive dirs (refuses if current)
-   - `cleanup/1` — stops service, removes service file, removes `/opt/ziprel`
+   - `cleanup/2` — stops service, removes service file, removes `/opt/ziprel/<appname>`
 
 5. **Create systemd service EEX template**
    - Files: `priv/ziprel/templates/app.service.eex`
-   - Template with bindings for `app_name`, `user`, `release_path` (`/opt/ziprel/current`)
+   - Template with bindings for `app_name`, `user`, `release_path` (`/opt/ziprel/<appname>/current`)
 
 6. **Refactor `Ziprel` root module**
    - Files: `lib/ziprel.ex`
@@ -101,7 +101,7 @@ Implement the full set of Ziprel Mix tasks (`ziprel`, `ziprel.init`, `ziprel.ssh
 9. **Implement `mix ziprel.sshcheck` task**
    - Files: `lib/mix/tasks/ziprel.sshcheck.ex`
    - Loads config, iterates servers
-   - For each: connect via SSH, run `whoami`, run `sudo -n true`, run `sudo mkdir -p /opt/ziprel && sudo rmdir /opt/ziprel`
+   - For each: connect via SSH, run `whoami`, run `sudo -n true`, test directory creation under `/opt/ziprel/<appname>`
    - Report pass/fail per server
 
 10. **Implement `mix ziprel.setup` task**
@@ -179,4 +179,4 @@ Implement the full set of Ziprel Mix tasks (`ziprel`, `ziprel.init`, `ziprel.ssh
 - [x] Should the SSH user's private key path be configurable in `ziprel.yaml` or rely on the system SSH agent?  Answer: rely on SSH agent.  We assume that user has already setup SSH keys on remote servers.
 - [x] Should `ziprel.deploy` build the release itself or expect a pre-built tarball? (Spec says build, but some users may want to separate build and deploy steps)  Answer: build the release as part of the deploy process.
 - [x] Should `ziprel.setup` automatically run `ziprel.deploy` or keep them as separate manual steps?  Answer: just do the setup steps, then end with a message telling the user to run `mix ziprel.deploy`
-- [x] What should the systemd service `ExecStart` command look like? Typically `/opt/ziprel/current/bin/<app> start` — confirm this matches the Elixir Release binary convention Answer: `PHX_SERVER=true /opt/ziprel/current/bin/<app> start`
+- [x] What should the systemd service `ExecStart` command look like? Typically `/opt/ziprel/<appname>/current/bin/<app> start` — confirm this matches the Elixir Release binary convention Answer: `PHX_SERVER=true /opt/ziprel/<appname>/current/bin/<app> start`

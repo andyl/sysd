@@ -8,10 +8,13 @@ defmodule Ziprel do
 
   ## Remote Directory Layout
 
-      /opt/ziprel/
+      /opt/ziprel/<appname>/
         archives/<version>.tar.gz
         releases/<version>/
         current -> releases/<version>
+
+  Each application gets its own subdirectory under `/opt/ziprel/`,
+  allowing multiple apps to be deployed on the same server.
   """
 
   @base_path "/opt/ziprel"
@@ -19,14 +22,17 @@ defmodule Ziprel do
   @doc "Root path for all Ziprel files on the remote server."
   def base_path, do: @base_path
 
-  @doc "Remote directory where release tarballs are stored."
-  def archives_path, do: Path.join(@base_path, "archives")
+  @doc "Per-application root path on the remote server."
+  def app_path(app_name), do: Path.join(@base_path, to_string(app_name))
 
-  @doc "Remote directory containing extracted release versions."
-  def releases_path, do: Path.join(@base_path, "releases")
+  @doc "Remote directory where release tarballs are stored for an app."
+  def archives_path(app_name), do: Path.join(app_path(app_name), "archives")
 
-  @doc "Symlink on the remote server pointing to the active release."
-  def current_path, do: Path.join(@base_path, "current")
+  @doc "Remote directory containing extracted release versions for an app."
+  def releases_path(app_name), do: Path.join(app_path(app_name), "releases")
+
+  @doc "Symlink on the remote server pointing to the active release for an app."
+  def current_path(app_name), do: Path.join(app_path(app_name), "current")
 
   @doc "Returns the application name atom from the Mix project config."
   def app_name do

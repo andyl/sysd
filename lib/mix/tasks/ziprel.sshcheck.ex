@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Ziprel.Sshcheck do
     1. Open an SSH connection using the configured user and SSH agent
     2. Run `whoami` to confirm the connection works
     3. Run `sudo -n true` to verify passwordless sudo access
-    4. Test that `/opt/ziprel` can be created
+    4. Test that `/opt/ziprel/<appname>` can be created
 
   A pass/fail summary is printed for each server. Fix any failures
   before running `mix ziprel.setup`.
@@ -60,12 +60,14 @@ defmodule Mix.Tasks.Ziprel.Sshcheck do
   end
 
   defp check_directory(conn, server) do
-    case SSH.run(conn, "sudo mkdir -p /opt/ziprel && sudo rmdir /opt/ziprel 2>/dev/null; echo ok") do
+    app_path = Ziprel.app_path(Ziprel.app_name())
+
+    case SSH.run(conn, "sudo mkdir -p #{app_path} && sudo rmdir #{app_path} 2>/dev/null; echo ok") do
       {:ok, _, 0} ->
         Mix.shell().info("  Directory access: OK")
 
       _ ->
-        Mix.shell().error("  #{server}: cannot create /opt/ziprel")
+        Mix.shell().error("  #{server}: cannot create #{app_path}")
     end
   end
 end

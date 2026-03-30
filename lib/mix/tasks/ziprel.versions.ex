@@ -7,8 +7,8 @@ defmodule Mix.Tasks.Ziprel.Versions do
       $ mix ziprel.versions
 
   For each server in `config/ziprel.yaml`, lists every version found
-  under `/opt/ziprel/releases/`. The currently active version (the
-  target of the `/opt/ziprel/current` symlink) is marked with
+  under `/opt/ziprel/<appname>/releases/`. The currently active version (the
+  target of the `/opt/ziprel/<appname>/current` symlink) is marked with
   `(current)`.
   """
   use Mix.Task
@@ -18,13 +18,14 @@ defmodule Mix.Tasks.Ziprel.Versions do
   @impl Mix.Task
   def run(_args) do
     config = Config.load()
+    app_name = Ziprel.app_name()
 
     Enum.each(config.servers, fn server ->
       Mix.shell().info("#{server}:")
 
       {:ok, conn} = SSH.connect(server, config.ssh)
-      current = Remote.current_version(conn)
-      versions = Remote.list_versions(conn)
+      current = Remote.current_version(conn, app_name)
+      versions = Remote.list_versions(conn, app_name)
 
       if Enum.empty?(versions) do
         Mix.shell().info("  No versions found")

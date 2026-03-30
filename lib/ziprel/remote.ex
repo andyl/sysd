@@ -9,10 +9,10 @@ defmodule Ziprel.Remote do
 
   alias Ziprel.SSH
 
-  @doc "Create the `/opt/ziprel/{archives,releases}` directory structure."
-  def setup_dirs(conn) do
-    SSH.run!(conn, "sudo mkdir -p #{Ziprel.archives_path()}")
-    SSH.run!(conn, "sudo mkdir -p #{Ziprel.releases_path()}")
+  @doc "Create the `/opt/ziprel/<appname>/{archives,releases}` directory structure."
+  def setup_dirs(conn, app_name) do
+    SSH.run!(conn, "sudo mkdir -p #{Ziprel.archives_path(app_name)}")
+    SSH.run!(conn, "sudo mkdir -p #{Ziprel.releases_path(app_name)}")
   end
 
   @doc "Write a systemd service file, reload systemd, and enable the service."
@@ -28,8 +28,8 @@ defmodule Ziprel.Remote do
 
   @doc "Upload a release tarball, extract it, update the symlink, and start/restart the service."
   def deploy(conn, app_name, local_tar_path, version) do
-    remote_archive = "#{Ziprel.archives_path()}/#{version}.tar.gz"
-    remote_release = "#{Ziprel.releases_path()}/#{version}"
+    remote_archive = "#{Ziprel.archives_path(app_name)}/#{version}.tar.gz"
+    remote_release = "#{Ziprel.releases_path(app_name)}/#{version}"
 
     tmp_archive = "/tmp/#{app_name}-#{version}.tar.gz"
     SSH.upload(conn, local_tar_path, tmp_archive)
@@ -37,7 +37,7 @@ defmodule Ziprel.Remote do
 
     SSH.run!(conn, "sudo mkdir -p #{remote_release}")
     SSH.run!(conn, "sudo tar -xzf #{remote_archive} -C #{remote_release}")
-    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Ziprel.current_path()}")
+    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Ziprel.current_path(app_name)}")
 
     case SSH.run(conn, "sudo systemctl is-active #{app_name}") do
       {:ok, _, 0} ->
@@ -49,8 +49,8 @@ defmodule Ziprel.Remote do
   end
 
   @doc "List all release versions present on the remote server."
-  def list_versions(conn) do
-    case SSH.run(conn, "ls #{Ziprel.releases_path()}") do
+  def list_versions(conn, app_name) do
+    case SSH.run(conn, "ls #{Ziprel.releases_path(app_name)}") do
       {:ok, output, 0} ->
         output |> String.trim() |> String.split("\n", trim: true)
 
@@ -60,8 +60,8 @@ defmodule Ziprel.Remote do
   end
 
   @doc "Return the currently active version by reading the `current` symlink, or `nil`."
-  def current_version(conn) do
-    case SSH.run(conn, "readlink #{Ziprel.current_path()}") do
+  def current_version(conn, app_name) do
+    case SSH.run(conn, "readlink #{Ziprel.current_path(app_name)}") do
       {:ok, output, 0} -> output |> String.trim() |> Path.basename()
       _ -> nil
     end
@@ -69,21 +69,21 @@ defmodule Ziprel.Remote do
 
   @doc "Switch the `current` symlink to the given version and restart the service."
   def rollback(conn, app_name, version) do
-    remote_release = "#{Ziprel.releases_path()}/#{version}"
-    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Ziprel.current_path()}")
+    remote_release = "#{Ziprel.releases_path(app_name)}/#{version}"
+    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Ziprel.current_path(app_name)}")
     SSH.run!(conn, "sudo systemctl restart #{app_name}")
   end
 
   @doc "Delete a release version and its archive. Refuses to remove the current version."
-  def remove_version(conn, version) do
-    current = current_version(conn)
+  def remove_version(conn, app_name, version) do
+    current = current_version(conn, app_name)
 
     if current == version do
       Mix.raise("Cannot remove the currently active version: #{version}")
     end
 
-    SSH.run!(conn, "sudo rm -rf #{Ziprel.releases_path()}/#{version}")
-    SSH.run!(conn, "sudo rm -f #{Ziprel.archives_path()}/#{version}.tar.gz")
+    SSH.run!(conn, "sudo rm -rf #{Ziprel.releases_path(app_name)}/#{version}")
+    SSH.run!(conn, "sudo rm -f #{Ziprel.archives_path(app_name)}/#{version}.tar.gz")
   end
 
   @doc "Stop the service, remove the service file, and delete all Ziprel files from the server."
@@ -92,6 +92,6 @@ defmodule Ziprel.Remote do
     SSH.run(conn, "sudo systemctl disable #{app_name}")
     SSH.run(conn, "sudo rm -f /etc/systemd/system/#{app_name}.service")
     SSH.run(conn, "sudo systemctl daemon-reload")
-    SSH.run!(conn, "sudo rm -rf #{Ziprel.base_path()}")
+    SSH.run!(conn, "sudo rm -rf #{Ziprel.app_path(app_name)}")
   end
 end

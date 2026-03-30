@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Ziprel.Setup do
 
   For each server listed in `config/ziprel.yaml`, this task will:
 
-    1. Create the remote directory structure at `/opt/ziprel/`
+    1. Create the remote directory structure at `/opt/ziprel/<appname>/`
     2. Install the systemd service file from `priv/ziprel/<appname>.service`
     3. Enable the systemd service
 
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Ziprel.Setup do
 
       {:ok, conn} = SSH.connect(server, config.ssh)
 
-      Remote.setup_dirs(conn)
+      Remote.setup_dirs(conn, app_name)
       Mix.shell().info("  Created directory structure")
 
       Remote.install_service(conn, app_name, service_content)
