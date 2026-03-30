@@ -6,8 +6,8 @@ After=network.target
 Type=simple
 User=<%= user %>
 Environment=PHX_SERVER=true
-ExecStart=/opt/ziprel/current/bin/<%= app_name %> start
-ExecStop=/opt/ziprel/current/bin/<%= app_name %> stop
+ExecStart=/opt/ziprel/<%= app_name %>/current/bin/<%= app_name %> start
+ExecStop=/opt/ziprel/<%= app_name %>/current/bin/<%= app_name %> stop
 Restart=on-failure
 RestartSec=5
 
