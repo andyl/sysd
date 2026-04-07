@@ -1,35 +1,35 @@
-defmodule Mix.Tasks.Ziprel.Deploy do
+defmodule Mix.Tasks.Relman.Deploy do
   @shortdoc "Deploy app to servers"
 
   @moduledoc """
   Build a release and deploy it to all configured servers.
 
-      $ mix ziprel.deploy
+      $ mix relman.deploy
 
   This task will:
 
     1. Build a production release with `MIX_ENV=prod mix release`
     2. Locate the release tarball in `_build/prod/rel/`
-    3. For each server in `config/ziprel.yaml`:
-       - Upload the tarball to `/opt/ziprel/<appname>/archives/<version>.tar.gz`
-       - Extract it to `/opt/ziprel/<appname>/releases/<version>/`
-       - Update the `/opt/ziprel/<appname>/current` symlink to the new version
+    3. For each server in `config/relman.yaml`:
+       - Upload the tarball to `/opt/relman/<appname>/archives/<version>.tar.gz`
+       - Extract it to `/opt/relman/<appname>/releases/<version>/`
+       - Update the `/opt/relman/<appname>/current` symlink to the new version
        - Start or restart the systemd service
 
   The service will be briefly offline during the deploy.
 
-  Run `mix ziprel.setup` before your first deployment to prepare the
+  Run `mix relman.setup` before your first deployment to prepare the
   remote servers.
   """
   use Mix.Task
 
-  alias Ziprel.{Config, SSH, Remote}
+  alias Relman.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(_args) do
     config = Config.load()
-    app_name = Ziprel.app_name()
-    version = Ziprel.version()
+    app_name = Relman.app_name()
+    version = Relman.version()
 
     Mix.shell().info("Building release #{app_name} #{version}...")
     Mix.shell().info("running `mix assets.deploy`...")
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Ziprel.Deploy do
     Mix.shell().info("running `mix release`...")
     Mix.Task.run("release", [])
 
-    tar_path = Ziprel.release_tar_path()
+    tar_path = Relman.release_tar_path()
 
     unless File.exists?(tar_path) do
       Mix.raise("""

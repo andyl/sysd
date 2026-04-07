@@ -49,4 +49,4 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Features:
 
-* implement all Ziprel Mix tasks for deployment lifecycle by andyl
+* implement all Relman Mix tasks for deployment lifecycle by andyl

@@ -2,8 +2,8 @@
 
 ## Summary
 
-Implement the full set of Ziprel Mix tasks for deploying Elixir Releases to
-bare metal servers over SSH. Ziprel provides a minimalist deployment workflow
+Implement the full set of Relman Mix tasks for deploying Elixir Releases to
+bare metal servers over SSH. Relman provides a minimalist deployment workflow
 targeting LAN/internal environments, using YAML configuration, SSHex for SSH
 connectivity, and systemd for service management.
 
@@ -23,69 +23,69 @@ connectivity, and systemd for service management.
 
 ## Mix Tasks
 
-### ziprel
+### relman
 
-Print a help overview listing all available ziprel Mix tasks with a short
+Print a help overview listing all available relman Mix tasks with a short
 description of each.
 
-### ziprel.init
+### relman.init
 
 Generate starter configuration files in the consumer project:
-- `config/ziprel.yaml` with default server and SSH settings
-- `priv/ziprel/<appname>.service` systemd service file as an EEX template
+- `config/relman.yaml` with default server and SSH settings
+- `priv/relman/<appname>.service` systemd service file as an EEX template
 
-### ziprel.sshcheck
+### relman.sshcheck
 
 Validate SSH connectivity and permissions on all configured servers:
 - Test SSH connection to each server
 - Verify the deploy user has sudo access
-- Verify the deploy user can create `/opt/ziprel/<appname>`
+- Verify the deploy user can create `/opt/relman/<appname>`
 
-### ziprel.setup
+### relman.setup
 
 Perform first-time server setup and initial deploy for each server:
 - Create the systemd service file at `/etc/systemd/services/<appname>.service`
-- Create the `/opt/ziprel/<appname>` directory structure
-- Run the deploy workflow (see ziprel.deploy)
+- Create the `/opt/relman/<appname>` directory structure
+- Run the deploy workflow (see relman.deploy)
 
-### ziprel.deploy
+### relman.deploy
 
 Build a release and deploy it to all configured servers:
 - Generate a new release with `MIX_ENV=prod mix release`
 - For each server:
-  - Copy the tar file to `/opt/ziprel/<appname>/archives/<version>.tar`
-  - Extract the release to `/opt/ziprel/<appname>/releases/<version>`
-  - Update the symlink `/opt/ziprel/<appname>/current` to point to the new release
+  - Copy the tar file to `/opt/relman/<appname>/archives/<version>.tar`
+  - Extract the release to `/opt/relman/<appname>/releases/<version>`
+  - Update the symlink `/opt/relman/<appname>/current` to point to the new release
   - Start or restart the systemd service
 
-### ziprel.versions
+### relman.versions
 
-List deployed release versions on each configured server by reading `/opt/ziprel/<appname>/releases`.
+List deployed release versions on each configured server by reading `/opt/relman/<appname>/releases`.
 
-### ziprel.rollback
+### relman.rollback
 
 Roll back to a previous release version on all servers:
 - Accept a version argument
-- Update the symlink `/opt/ziprel/<appname>/current` to point to the specified version
+- Update the symlink `/opt/relman/<appname>/current` to point to the specified version
 - Restart the systemd service
 
-### ziprel.remove
+### relman.remove
 
 Remove an old release version from all servers:
 - Accept a version argument
 - Refuse to remove the currently active version
-- Remove `/opt/ziprel/<appname>/releases/<version>` and `/opt/ziprel/<appname>/archives/<version>.tar`
+- Remove `/opt/relman/<appname>/releases/<version>` and `/opt/relman/<appname>/archives/<version>.tar`
 
-### ziprel.cleanup
+### relman.cleanup
 
-Fully remove Ziprel from a specific server:
-- Remove the server entry from `config/ziprel.yaml`
+Fully remove Relman from a specific server:
+- Remove the server entry from `config/relman.yaml`
 - Remove the systemd service file
-- Remove the `/opt/ziprel/<appname>` directory
+- Remove the `/opt/relman/<appname>` directory
 
 ## Configuration
 
-YAML configuration at `config/ziprel.yaml`:
+YAML configuration at `config/relman.yaml`:
 
 ```yaml
 servers:
@@ -98,7 +98,7 @@ ssh:
 ## Remote Server Layout
 
 ```
-/opt/ziprel/<appname>/
+/opt/relman/<appname>/
   archives/<version>.tar
   releases/<version>/
   current -> releases/<version>

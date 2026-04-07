@@ -1,31 +1,31 @@
-defmodule Mix.Tasks.Ziprel.Cleanup do
+defmodule Mix.Tasks.Relman.Cleanup do
   @shortdoc "Remove everything from server"
 
   @moduledoc """
-  Completely remove Ziprel from a server.
+  Completely remove Relman from a server.
 
-      $ mix ziprel.cleanup SERVER
+      $ mix relman.cleanup SERVER
 
   This task will:
 
     1. Stop and disable the systemd service
     2. Remove the service file from `/etc/systemd/system/`
-    3. Delete the `/opt/ziprel/<appname>/` directory
-    4. Remove the server entry from `config/ziprel.yaml`
+    3. Delete the `/opt/relman/<appname>/` directory
+    4. Remove the server entry from `config/relman.yaml`
 
   This is a destructive operation. The server must be listed in
-  `config/ziprel.yaml`.
+  `config/relman.yaml`.
   """
   use Mix.Task
 
-  alias Ziprel.{Config, SSH, Remote}
+  alias Relman.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(args) do
     case args do
       [server] ->
         config = Config.load()
-        app_name = Ziprel.app_name()
+        app_name = Relman.app_name()
 
         unless server in config.servers do
           Mix.raise("Server #{server} not found in config")
@@ -38,10 +38,10 @@ defmodule Mix.Tasks.Ziprel.Cleanup do
 
         Config.remove_server(config, server)
 
-        Mix.shell().info("  Removed all Ziprel files and config for #{server}")
+        Mix.shell().info("  Removed all Relman files and config for #{server}")
 
       _ ->
-        Mix.raise("Usage: mix ziprel.cleanup SERVER")
+        Mix.raise("Usage: mix relman.cleanup SERVER")
     end
   end
 end

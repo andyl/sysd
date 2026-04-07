@@ -1,30 +1,30 @@
-defmodule Mix.Tasks.Ziprel.Rollback do
+defmodule Mix.Tasks.Relman.Rollback do
   @shortdoc "Rollback to a previous version"
 
   @moduledoc """
   Roll back to a previously deployed release version.
 
-      $ mix ziprel.rollback VERSION
+      $ mix relman.rollback VERSION
 
-  For each server in `config/ziprel.yaml`, this task will:
+  For each server in `config/relman.yaml`, this task will:
 
-    1. Update the `/opt/ziprel/<appname>/current` symlink to point to
-       `/opt/ziprel/<appname>/releases/<VERSION>`
+    1. Update the `/opt/relman/<appname>/current` symlink to point to
+       `/opt/relman/<appname>/releases/<VERSION>`
     2. Restart the systemd service
 
   The target version must already exist on the server. Use
-  `mix ziprel.versions` to see available versions.
+  `mix relman.versions` to see available versions.
   """
   use Mix.Task
 
-  alias Ziprel.{Config, SSH, Remote}
+  alias Relman.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(args) do
     case args do
       [version] ->
         config = Config.load()
-        app_name = Ziprel.app_name()
+        app_name = Relman.app_name()
 
         Enum.each(config.servers, fn server ->
           Mix.shell().info("Rolling back #{server} to #{version}...")
@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Ziprel.Rollback do
         end)
 
       _ ->
-        Mix.raise("Usage: mix ziprel.rollback VERSION")
+        Mix.raise("Usage: mix relman.rollback VERSION")
     end
   end
 end

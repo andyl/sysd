@@ -1,4 +1,4 @@
-defmodule Ziprel.SSH do
+defmodule Relman.SSH do
   @moduledoc """
   SSH connectivity layer wrapping SSHEx and Erlang's `:ssh_sftp`.
 

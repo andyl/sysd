@@ -1,22 +1,22 @@
-defmodule Mix.Tasks.Ziprel.Init do
+defmodule Mix.Tasks.Relman.Init do
   @shortdoc "Generate config stubs"
 
   @moduledoc """
-  Generate Ziprel configuration files for your project.
+  Generate Relman configuration files for your project.
 
-      $ mix ziprel.init
+      $ mix relman.init
 
   Creates the following files if they do not already exist:
 
-    * `config/ziprel.yaml` — server list and SSH settings
-    * `priv/ziprel/<appname>.service` — systemd unit file
+    * `config/relman.yaml` — server list and SSH settings
+    * `priv/relman/<appname>.service` — systemd unit file
 
   The YAML config is pre-filled with a placeholder server and a default
   `deploy` user. Edit it to match your environment before running
-  `mix ziprel.sshcheck`.
+  `mix relman.sshcheck`.
 
   The systemd service file is rendered from an EEX template and can be
-  customized before running `mix ziprel.setup`.
+  customized before running `mix relman.setup`.
 
   Existing files are never overwritten.
   """
@@ -24,9 +24,9 @@ defmodule Mix.Tasks.Ziprel.Init do
 
   @impl Mix.Task
   def run(_args) do
-    app_name = Ziprel.app_name()
-    config_path = Ziprel.Config.config_path()
-    service_path = "priv/ziprel/#{app_name}.service"
+    app_name = Relman.app_name()
+    config_path = Relman.Config.config_path()
+    service_path = "priv/relman/#{app_name}.service"
     user_name = System.get_env("USER")
 
     if File.exists?(config_path) do
@@ -48,9 +48,9 @@ defmodule Mix.Tasks.Ziprel.Init do
       Mix.shell().info("Service file already exists: #{service_path}")
     else
       template_path =
-        :ziprel
+        :relman
         |> :code.priv_dir()
-        |> Path.join("ziprel/templates/app.service.eex")
+        |> Path.join("relman/templates/app.service.eex")
 
       content = EEx.eval_file(template_path, app_name: app_name, user: user_name)
 

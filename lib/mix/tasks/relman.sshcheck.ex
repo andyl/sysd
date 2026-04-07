@@ -1,28 +1,28 @@
-defmodule Mix.Tasks.Ziprel.Sshcheck do
+defmodule Mix.Tasks.Relman.Sshcheck do
   @shortdoc "Check SSH connection and permissions"
 
   @moduledoc """
   Verify SSH connectivity and permissions on all configured servers.
 
-      $ mix ziprel.sshcheck
+      $ mix relman.sshcheck
 
-  For each server listed in `config/ziprel.yaml`, this task will:
+  For each server listed in `config/relman.yaml`, this task will:
 
     1. Open an SSH connection using the configured user and SSH agent
     2. Run `whoami` to confirm the connection works
     3. Run `sudo -n true` to verify passwordless sudo access
-    4. Test that `/opt/ziprel/<appname>` can be created
+    4. Test that `/opt/relman/<appname>` can be created
 
   A pass/fail summary is printed for each server. Fix any failures
-  before running `mix ziprel.setup`.
+  before running `mix relman.setup`.
   """
   use Mix.Task
 
-  alias Ziprel.SSH
+  alias Relman.SSH
 
   @impl Mix.Task
   def run(_args) do
-    config = Ziprel.Config.load()
+    config = Relman.Config.load()
 
     Enum.each(config.servers, fn server ->
       Mix.shell().info("Checking #{server}...")
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Ziprel.Sshcheck do
   end
 
   defp check_directory(conn, server) do
-    app_path = Ziprel.app_path(Ziprel.app_name())
+    app_path = Relman.app_path(Relman.app_name())
 
     case SSH.run(conn, "sudo mkdir -p #{app_path} && sudo rmdir #{app_path} 2>/dev/null; echo ok") do
       {:ok, _, 0} ->

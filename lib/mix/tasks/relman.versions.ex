@@ -1,24 +1,24 @@
-defmodule Mix.Tasks.Ziprel.Versions do
+defmodule Mix.Tasks.Relman.Versions do
   @shortdoc "List release versions on servers"
 
   @moduledoc """
   List deployed release versions on all configured servers.
 
-      $ mix ziprel.versions
+      $ mix relman.versions
 
-  For each server in `config/ziprel.yaml`, lists every version found
-  under `/opt/ziprel/<appname>/releases/`. The currently active version (the
-  target of the `/opt/ziprel/<appname>/current` symlink) is marked with
+  For each server in `config/relman.yaml`, lists every version found
+  under `/opt/relman/<appname>/releases/`. The currently active version (the
+  target of the `/opt/relman/<appname>/current` symlink) is marked with
   `(current)`.
   """
   use Mix.Task
 
-  alias Ziprel.{Config, SSH, Remote}
+  alias Relman.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(_args) do
     config = Config.load()
-    app_name = Ziprel.app_name()
+    app_name = Relman.app_name()
 
     Enum.each(config.servers, fn server ->
       Mix.shell().info("#{server}:")

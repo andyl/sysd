@@ -1,8 +1,8 @@
-defmodule Ziprel.Config do
+defmodule Relman.Config do
   @moduledoc """
-  Reads, writes, and manipulates the Ziprel YAML configuration.
+  Reads, writes, and manipulates the Relman YAML configuration.
 
-  The config file lives at `config/ziprel.yaml` in the consumer project
+  The config file lives at `config/relman.yaml` in the consumer project
   and has this structure:
 
       servers:
@@ -19,13 +19,13 @@ defmodule Ziprel.Config do
 
   defstruct servers: [], ssh: %{}
 
-  @config_path "config/ziprel.yaml"
+  @config_path "config/relman.yaml"
 
   @doc "Returns the path to the YAML config file."
   def config_path, do: @config_path
 
   @doc """
-  Load and parse the YAML config file into a `%Ziprel.Config{}` struct.
+  Load and parse the YAML config file into a `%Relman.Config{}` struct.
 
   Raises a `Mix.Error` if the file does not exist.
   """
@@ -33,7 +33,7 @@ defmodule Ziprel.Config do
     path = @config_path
 
     unless File.exists?(path) do
-      Mix.raise("Config file not found: #{path}\nRun `mix ziprel.init` to generate it.")
+      Mix.raise("Config file not found: #{path}\nRun `mix relman.init` to generate it.")
     end
 
     data = YamlElixir.read_from_file!(path)
@@ -45,7 +45,7 @@ defmodule Ziprel.Config do
   end
 
   @doc """
-  Write a `%Ziprel.Config{}` struct back to the YAML config file.
+  Write a `%Relman.Config{}` struct back to the YAML config file.
 
   Creates the parent directory if it does not exist.
   """
@@ -65,7 +65,7 @@ defmodule Ziprel.Config do
   @doc """
   Remove a server from the config and write the updated file.
 
-  Returns the updated `%Ziprel.Config{}` struct.
+  Returns the updated `%Relman.Config{}` struct.
   """
   def remove_server(%__MODULE__{} = config, server) do
     updated = %{config | servers: Enum.reject(config.servers, &(&1 == server))}

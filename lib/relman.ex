@@ -1,6 +1,6 @@
-defmodule Ziprel do
+defmodule Relman do
   @moduledoc """
-  Helpers and path constants for Ziprel deployments.
+  Helpers and path constants for Relman deployments.
 
   Provides the remote directory layout used on target servers and
   convenience functions for deriving application metadata from the
@@ -8,18 +8,18 @@ defmodule Ziprel do
 
   ## Remote Directory Layout
 
-      /opt/ziprel/<appname>/
+      /opt/relman/<appname>/
         archives/<version>.tar.gz
         releases/<version>/
         current -> releases/<version>
 
-  Each application gets its own subdirectory under `/opt/ziprel/`,
+  Each application gets its own subdirectory under `/opt/relman/`,
   allowing multiple apps to be deployed on the same server.
   """
 
-  @base_path "/opt/ziprel"
+  @base_path "/opt/relman"
 
-  @doc "Root path for all Ziprel files on the remote server."
+  @doc "Root path for all Relman files on the remote server."
   def base_path, do: @base_path
 
   @doc "Per-application root path on the remote server."

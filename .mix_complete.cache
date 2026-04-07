@@ -96,17 +96,17 @@ progen.validate.list	List all registered ProGen validators
 progen.validate.run	Run a ProGen validator with specified checks
 release	Assembles a self-contained release
 release.init	Generates sample files for releases
+relman	Display Relman help
+relman.cleanup	Remove everything from server
+relman.deploy	Deploy app to servers
+relman.init	Generate config stubs
+relman.remove	Remove old releases
+relman.rollback	Rollback to a previous version
+relman.setup	Setup servers for deployment
+relman.sshcheck	Check SSH connection and permissions
+relman.versions	List release versions on servers
 run	Runs the current application
 tableau.new	Generate a new Tableau website
 test	Runs a project's tests
 test.coverage	Build report from exported test coverage
 xref	Prints cross reference information
-ziprel	Display Ziprel help
-ziprel.cleanup	Remove everything from server
-ziprel.deploy	Deploy app to servers
-ziprel.init	Generate config stubs
-ziprel.remove	Remove old releases
-ziprel.rollback	Rollback to a previous version
-ziprel.setup	Setup servers for deployment
-ziprel.sshcheck	Check SSH connection and permissions
-ziprel.versions	List release versions on servers

@@ -1,8 +1,8 @@
-defmodule Ziprel.ConfigTest do
+defmodule Relman.ConfigTest do
   use ExUnit.Case
 
   @fixture_dir "test/fixtures"
-  @fixture_path "#{@fixture_dir}/ziprel.yaml"
+  @fixture_path "#{@fixture_dir}/relman.yaml"
 
   setup do
     File.mkdir_p!(@fixture_dir)
@@ -16,7 +16,7 @@ defmodule Ziprel.ConfigTest do
 
   test "load/0 raises when config file is missing" do
     assert_raise Mix.Error, ~r/Config file not found/, fn ->
-      Ziprel.Config.load()
+      Relman.Config.load()
     end
   end
 
@@ -56,7 +56,7 @@ defmodule Ziprel.ConfigTest do
   end
 
   test "remove_server/2 removes a server from config" do
-    config = %Ziprel.Config{servers: ["host1", "host2"], ssh: %{user: "deploy"}}
+    config = %Relman.Config{servers: ["host1", "host2"], ssh: %{user: "deploy"}}
     updated = %{config | servers: Enum.reject(config.servers, &(&1 == "host1"))}
 
     assert updated.servers == ["host2"]
@@ -65,7 +65,7 @@ defmodule Ziprel.ConfigTest do
   defp load_fixture do
     data = YamlElixir.read_from_file!(@fixture_path)
 
-    %Ziprel.Config{
+    %Relman.Config{
       servers: data["servers"] || [],
       ssh: Map.new(data["ssh"] || %{}, fn {k, v} -> {String.to_atom(k), v} end)
     }

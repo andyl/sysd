@@ -1,18 +1,18 @@
-defmodule Ziprel.MixProject do
+defmodule Relman.MixProject do
   use Mix.Project
 
   @version "0.2.0"
 
   def project do
     [
-      app: :ziprel,
+      app: :relman,
       version: @version,
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       licenses: ["MIT"],
       docs: docs(),
       package: [
-        name: "ziprel",
+        name: "relman",
         licenses: ["MIT"],
         links: %{
           "GitHub" => "https://github.com/andyl/commit_hook",
@@ -34,7 +34,7 @@ defmodule Ziprel.MixProject do
     [
       main: "readme",
       extras: [{"README.md", title: "Overview"}],
-      source_url: "https://github.com/andyl/ziprel",
+      source_url: "https://github.com/andyl/relman",
       source_ref: "v#{@version}"
     ]
   end
