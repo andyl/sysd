@@ -2,5 +2,5 @@
 
 # Create and push a Relman release
 
-mix git_ops.release && git push --follow-tags 
+mix git_ops.release --yes && git push --follow-tags 
 
