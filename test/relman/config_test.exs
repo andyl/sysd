@@ -35,6 +35,7 @@ defmodule Relman.ConfigTest do
 
     assert config.servers == ["host1", "host2"]
     assert config.ssh[:user] == "deploy"
+    assert Relman.Config.publishers(config) == []
   end
 
   test "write/1 writes config back to YAML" do
@@ -62,12 +63,74 @@ defmodule Relman.ConfigTest do
     assert updated.servers == ["host2"]
   end
 
+  describe "parse/1 - release.publish" do
+    test "returns empty publisher list when release block is missing" do
+      config = Relman.Config.parse(%{"servers" => ["h1"], "ssh" => %{"user" => "u"}})
+      assert Relman.Config.publishers(config) == []
+    end
+
+    test "parses a github publisher with defaults" do
+      config =
+        Relman.Config.parse(%{
+          "release" => %{"publish" => [%{"type" => "github"}]}
+        })
+
+      assert [%{type: :github, draft: false, prerelease: false}] =
+               Relman.Config.publishers(config)
+    end
+
+    test "parses github draft/prerelease flags" do
+      config =
+        Relman.Config.parse(%{
+          "release" => %{
+            "publish" => [%{"type" => "github", "draft" => true, "prerelease" => true}]
+          }
+        })
+
+      assert [%{type: :github, draft: true, prerelease: true}] =
+               Relman.Config.publishers(config)
+    end
+
+    test "parses a file publisher" do
+      config =
+        Relman.Config.parse(%{
+          "release" => %{
+            "publish" => [%{"type" => "file", "path" => "/mnt/releases/app/"}]
+          }
+        })
+
+      assert [%{type: :file, path: "/mnt/releases/app/"}] =
+               Relman.Config.publishers(config)
+    end
+
+    test "parses a mixed publisher list in order" do
+      config =
+        Relman.Config.parse(%{
+          "release" => %{
+            "publish" => [
+              %{"type" => "github"},
+              %{"type" => "file", "path" => "/tmp/rel/"}
+            ]
+          }
+        })
+
+      assert [
+               %{type: :github},
+               %{type: :file, path: "/tmp/rel/"}
+             ] = Relman.Config.publishers(config)
+    end
+
+    test "raises on unknown publisher type" do
+      assert_raise Mix.Error, ~r/Unknown publisher type/, fn ->
+        Relman.Config.parse(%{
+          "release" => %{"publish" => [%{"type" => "s3"}]}
+        })
+      end
+    end
+  end
+
   defp load_fixture do
     data = YamlElixir.read_from_file!(@fixture_path)
-
-    %Relman.Config{
-      servers: data["servers"] || [],
-      ssh: Map.new(data["ssh"] || %{}, fn {k, v} -> {String.to_atom(k), v} end)
-    }
+    Relman.Config.parse(data)
   end
 end

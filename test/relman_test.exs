@@ -15,6 +15,23 @@ defmodule RelmanTest do
     assert path =~ ".tar.gz"
   end
 
+  test "version_tag prepends v" do
+    assert Relman.version_tag() == "v#{Relman.version()}"
+  end
+
+  test "tarball_basename has the expected shape" do
+    assert Relman.tarball_basename() == "relman-#{Relman.version()}.tar.gz"
+  end
+
+  test "build_host returns a non-empty string" do
+    assert is_binary(Relman.build_host())
+    assert Relman.build_host() != ""
+  end
+
+  test "git_tag_exists? returns a boolean" do
+    assert is_boolean(Relman.git_tag_exists?("definitely-not-a-real-tag-xyz"))
+  end
+
   test "path helpers return expected paths" do
     assert Relman.base_path() == "/opt/relman"
     assert Relman.app_path(:myapp) == "/opt/relman/myapp"

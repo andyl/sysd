@@ -48,6 +48,34 @@ defmodule Relman.Remote do
     end
   end
 
+  @doc """
+  Write a `RELEASE_INFO` file into the remote release directory for
+  an app/version. The file is a simple `key=value` text document used
+  for incident debugging — expected keys include `git_sha`,
+  `build_host`, `build_timestamp`, and optionally `publisher_url`.
+  """
+  def write_release_info(conn, app_name, version, info) when is_map(info) do
+    body = format_release_info(info)
+    release_dir = "#{Relman.releases_path(app_name)}/#{version}"
+    remote_path = "#{release_dir}/RELEASE_INFO"
+    tmp_path = "/tmp/#{app_name}-#{version}-RELEASE_INFO"
+
+    SSH.run!(conn, "cat > #{tmp_path} << 'RELINFOEOF'\n#{body}\nRELINFOEOF")
+    SSH.run!(conn, "sudo mv #{tmp_path} #{remote_path}")
+    :ok
+  end
+
+  @doc false
+  def format_release_info(info) do
+    info
+    |> Enum.map(fn {k, v} -> "#{k}=#{format_value(v)}" end)
+    |> Enum.join("\n")
+  end
+
+  defp format_value(nil), do: ""
+  defp format_value(v) when is_binary(v), do: v
+  defp format_value(v), do: to_string(v)
+
   @doc "List all release versions present on the remote server."
   def list_versions(conn, app_name) do
     case SSH.run(conn, "ls #{Relman.releases_path(app_name)}") do

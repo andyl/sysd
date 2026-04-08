@@ -37,6 +37,18 @@ defmodule Mix.Tasks.Relman.Init do
         - host1
       ssh:
         user: #{user_name}
+
+      # Optional: publish release tarballs to one or more external
+      # artifact stores. Omit this block entirely for a local-only
+      # build. Publishers are invoked in the order they appear.
+      #
+      # release:
+      #   publish:
+      #     - type: github
+      #       draft: false
+      #       prerelease: false
+      #     - type: file
+      #       path: /mnt/releases/#{app_name}/
       """
 
       File.mkdir_p!(Path.dirname(config_path))

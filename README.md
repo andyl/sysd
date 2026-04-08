@@ -54,15 +54,34 @@ Perform first-time server setup and initial deploy for each server:
 - Create the `/opt/relman/<appname>` directory structure
 - Run the deploy workflow (see relman.deploy)
 
+### relman.release
+
+Build a production release tarball and optionally publish it to the
+configured publishers:
+- Verify that the `v<@version>` git tag exists locally (create it with
+  `mix git_ops.release`)
+- Run publisher preflight checks up front so misconfiguration fails fast
+- Skip the build if a tarball for `@version` already exists, unless
+  `--force` is passed
+- Otherwise run `mix assets.deploy` followed by `mix release`
+- Invoke each configured publisher in order
+
+Flags: `--force`, `--replace`, `--no-publish`.
+
 ### relman.deploy
 
-Build a release and deploy it to all configured servers:
-- Generate a new release with `MIX_ENV=prod mix release`
+Push an existing release tarball to every configured server:
+- If no local tarball exists for `@version`, invoke `mix relman.release`
+  to build one (the default path)
+- With `--from-release`, fetch the tarball for `@version` from the first
+  fetch-capable publisher — useful for deploying from a fresh checkout
 - For each server:
-  - Copy the tar file to `/opt/relman/<appname>/archives/<version>.tar`
+  - Copy the tarball to `/opt/relman/<appname>/archives/<version>.tar.gz`
   - Extract the release to `/opt/relman/<appname>/releases/<version>`
   - Update the symlink `/opt/relman/<appname>/current` to point to the new release
   - Start or restart the systemd service
+  - Write `/opt/relman/<appname>/releases/<version>/RELEASE_INFO` with
+    the git sha, build host, timestamp, and publisher URL (if used)
 
 ### relman.versions
 
@@ -99,6 +118,43 @@ servers:
   - host2
 ssh:
   user: <name>
+
+# Optional. Publishers run in order during `mix relman.release` and are
+# walked in order for `mix relman.deploy --from-release`. Omit the
+# `release.publish` block entirely for a local-only build.
+release:
+  publish:
+    - type: github
+      draft: false
+      prerelease: false
+    - type: file
+      path: /mnt/releases/myapp/
+```
+
+### Publishers
+
+Two publisher types ship out of the box:
+
+- **`github`** — uses the `gh` CLI to upload the tarball as a release
+  asset on the `v<@version>` tag. Requires `gh` on `$PATH`, a valid
+  `gh auth status`, and a `github.com` origin remote.
+- **`file`** — copies the tarball to `<path>/<app>-<version>.tar.gz`.
+  Useful for NFS shares, static web directories, or local archive
+  folders. The target directory must already exist and be writable.
+
+Typical flow:
+
+```
+mix git_ops.release                    # bump version, create v<x.y.z>
+MIX_ENV=prod mix relman.release        # build and publish
+MIX_ENV=prod mix relman.deploy         # push to servers
+```
+
+Deploying from a fresh checkout with no local build:
+
+```
+git checkout v0.3.0
+MIX_ENV=prod mix relman.deploy --from-release
 ```
 
 ## Remote Server Layout

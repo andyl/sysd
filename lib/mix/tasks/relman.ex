@@ -14,7 +14,8 @@ defmodule Mix.Tasks.Relman do
   | `mix relman.init`              | Generate config stubs                |
   | `mix relman.sshcheck`          | Check SSH connection and permissions |
   | `mix relman.setup`             | Setup servers for deployment         |
-  | `mix relman.deploy`            | Deploy app to servers                |
+  | `mix relman.release`           | Build release tarball and publish    |
+  | `mix relman.deploy`            | Deploy a release to servers          |
   | `mix relman.versions`          | List release versions on servers     |
   | `mix relman.rollback VERSION`  | Rollback to a previous version       |
   | `mix relman.remove VERSION`    | Remove old releases                  |
@@ -34,7 +35,8 @@ defmodule Mix.Tasks.Relman do
       mix relman.init                Generate config stubs
       mix relman.sshcheck            Check SSH connection and permissions
       mix relman.setup               Setup servers for deployment
-      mix relman.deploy              Deploy app to servers
+      mix relman.release             Build release tarball and publish
+      mix relman.deploy              Deploy a release to servers
       mix relman.versions            List release versions on servers
       mix relman.rollback [VERSION]  Rollback to a previous version
       mix relman.remove [VERSION]    Remove old releases
