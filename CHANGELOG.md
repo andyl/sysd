@@ -5,6 +5,25 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## v0.4.0 (2026-04-09)
+
+
+
+
+### Features:
+
+* add status, start, stop, restart, and tail mix tasks by andyl
+
+### Bug Fixes:
+
+* ensure OTP app paths are loaded for SSH in mix tasks by andyl
+
+* rename RELDEP_CONFIG to SYSD_CONFIG_FILE by andyl
+
+* remove publish/release code by andyl
+
+* change naming scheme to 'sysd' by andyl
+
 ## v0.3.0 (2026-04-09)
 
 
