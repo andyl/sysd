@@ -8,7 +8,7 @@ defmodule Sysd.RemoteTest do
         version: "0.1.0",
         git_sha: "abc123",
         build_host: "laptop",
-        build_timestamp: "2026-04-07T12:00:00Z",
+        build_timestamp: "2026-04-07T12:00:00Z"
       })
 
     assert body =~ "app=myapp"
