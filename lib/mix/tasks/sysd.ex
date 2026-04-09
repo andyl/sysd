@@ -17,6 +17,11 @@ defmodule Mix.Tasks.Sysd do
   | `mix sysd.deploy`            | Deploy a release to servers          |
   | `mix sysd.versions`          | List release versions on servers     |
   | `mix sysd.rollback VERSION`  | Rollback to a previous version       |
+  | `mix sysd.status [SERVER]`   | Show systemd service status          |
+  | `mix sysd.start [SERVER]`    | Start the systemd service            |
+  | `mix sysd.stop [SERVER]`     | Stop the systemd service             |
+  | `mix sysd.restart [SERVER]`  | Restart the systemd service          |
+  | `mix sysd.tail SERVER`       | Tail journal logs from a server      |
   | `mix sysd.remove VERSION`    | Remove old releases                  |
   | `mix sysd.cleanup SERVER`    | Remove everything from server        |
 
@@ -37,6 +42,11 @@ defmodule Mix.Tasks.Sysd do
       mix sysd.deploy              Deploy a release to servers
       mix sysd.versions            List release versions on servers
       mix sysd.rollback [VERSION]  Rollback to a previous version
+      mix sysd.status [SERVER]     Show systemd service status
+      mix sysd.start [SERVER]      Start the systemd service
+      mix sysd.stop [SERVER]       Stop the systemd service
+      mix sysd.restart [SERVER]    Restart the systemd service
+      mix sysd.tail SERVER         Tail journal logs from a server
       mix sysd.remove [VERSION]    Remove old releases
       mix sysd.cleanup [SERVER]    Remove everything from server
     """)

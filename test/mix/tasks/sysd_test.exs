@@ -9,6 +9,11 @@ defmodule Mix.Tasks.SysdTest do
     assert output =~ "mix sysd.init"
     assert output =~ "mix sysd.deploy"
     assert output =~ "mix sysd.rollback"
+    assert output =~ "mix sysd.status"
+    assert output =~ "mix sysd.start"
+    assert output =~ "mix sysd.stop"
+    assert output =~ "mix sysd.restart"
+    assert output =~ "mix sysd.tail"
     assert output =~ "mix sysd.cleanup"
   end
 end

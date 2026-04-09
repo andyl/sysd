@@ -121,6 +121,32 @@ Roll back to a previous release version on all servers:
 - Update the symlink `/opt/sysd/<appname>/current` to point to the specified version
 - Restart the systemd service
 
+### sysd.status
+
+Show the systemd service status on configured servers. Without arguments,
+checks all servers. With a server name, checks only that server.
+
+### sysd.start
+
+Start the systemd service. Without arguments, starts on all servers. With
+a server name, starts only on that server.
+
+### sysd.stop
+
+Stop the systemd service. Without arguments, stops on all servers. With
+a server name, stops only on that server.
+
+### sysd.restart
+
+Restart the systemd service. Without arguments, restarts on all servers.
+With a server name, restarts only on that server.
+
+### sysd.tail
+
+Tail systemd journal logs from a specific server. A server name is required
+because tailing is time-bounded and running sequentially across multiple
+servers would not produce useful output.
+
 ### sysd.remove
 
 Remove an old release version from all servers:
