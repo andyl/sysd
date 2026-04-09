@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## v0.4.1 (2026-04-09)
+
+
+
+
+### Bug Fixes:
+
+* add multi-instance by andyl
+
 ## v0.4.0 (2026-04-09)
 
 
