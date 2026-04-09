@@ -20,6 +20,8 @@ defmodule Mix.Tasks.Sysd.Cleanup do
 
   @impl Mix.Task
   def run(args) do
+    Mix.Task.run("app.config")
+
     case args do
       [server] ->
         config = Sysd.Config.load()

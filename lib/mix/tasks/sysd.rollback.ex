@@ -19,6 +19,8 @@ defmodule Mix.Tasks.Sysd.Rollback do
 
   @impl Mix.Task
   def run(args) do
+    Mix.Task.run("app.config")
+
     case args do
       [version] ->
         config = Sysd.Config.load()

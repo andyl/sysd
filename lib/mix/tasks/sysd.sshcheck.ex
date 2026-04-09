@@ -20,6 +20,7 @@ defmodule Mix.Tasks.Sysd.Sshcheck do
 
   @impl Mix.Task
   def run(_args) do
+    Mix.Task.run("app.config")
     config = Sysd.Config.load()
     app_name = Sysd.app_name()
 

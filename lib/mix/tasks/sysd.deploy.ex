@@ -29,6 +29,7 @@ defmodule Mix.Tasks.Sysd.Deploy do
 
   @impl Mix.Task
   def run(_args) do
+    Mix.Task.run("app.config")
     config = Config.load()
     app_name = Sysd.app_name()
     version = Sysd.version()

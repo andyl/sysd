@@ -20,7 +20,7 @@ defmodule Sysd.SSH do
   Returns `{:ok, conn}` or `{:error, reason}`.
   """
   def connect(host, ssh_config) do
-    :ssh.start()
+    Application.ensure_all_started(:ssh)
 
     opts = [
       ip: to_charlist(host),
