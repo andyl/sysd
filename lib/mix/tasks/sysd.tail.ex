@@ -22,8 +22,13 @@ defmodule Mix.Tasks.Sysd.Tail do
     config = Sysd.Config.load()
     app_name = Sysd.app_name()
 
+    {parsed, rest, _} =
+      OptionParser.parse(args, strict: [instance: :string], aliases: [i: :instance])
+
+    instance_opts = if parsed[:instance], do: [instance: parsed[:instance]], else: []
+
     server =
-      case {args, config.servers} do
+      case {rest, config.servers} do
         {[server], _} ->
           unless server in config.servers do
             Mix.raise("Unknown server: #{server} (not in config/sysd.yaml)")
@@ -35,14 +40,23 @@ defmodule Mix.Tasks.Sysd.Tail do
           single
 
         _ ->
-          Mix.raise("Usage: mix sysd.tail SERVER")
+          Mix.raise("Usage: mix sysd.tail SERVER [--instance NAME]")
       end
 
     Mix.shell().info("Tailing #{server} (10s)...")
 
-    case Sysd.Deploy.tail(server, app: app_name, config: config) do
-      {:ok, output} -> Mix.shell().info(output)
-      {:error, reason} -> Mix.shell().error("Failed: #{inspect(reason)}")
+    case Sysd.Deploy.tail(server, [app: app_name, config: config] ++ instance_opts) do
+      {:ok, output} when is_binary(output) ->
+        Mix.shell().info(output)
+
+      {:ok, outputs} when is_map(outputs) ->
+        Enum.each(outputs, fn {svc, output} ->
+          Mix.shell().info("--- #{svc} ---")
+          Mix.shell().info(output)
+        end)
+
+      {:error, reason} ->
+        Mix.shell().error("Failed: #{inspect(reason)}")
     end
   end
 end

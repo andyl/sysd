@@ -19,17 +19,30 @@ defmodule Mix.Tasks.Sysd.Status do
     Mix.Task.run("app.config")
     config = Sysd.Config.load()
     app_name = Sysd.app_name()
-    servers = target_servers(args, config)
+    {opts, servers} = parse_args(args, config)
 
     Enum.each(servers, fn server ->
-      case Sysd.Deploy.status(server, app: app_name, config: config) do
-        {:ok, status} ->
+      case Sysd.Deploy.status(server, [app: app_name, config: config] ++ opts) do
+        {:ok, status} when is_binary(status) ->
           Mix.shell().info("#{server}: #{status}")
+
+        {:ok, status} when is_map(status) ->
+          Mix.shell().info("#{server}:")
+          Enum.each(status, fn {svc, s} -> Mix.shell().info("  #{svc}: #{s}") end)
 
         {:error, reason} ->
           Mix.shell().error("#{server}: #{inspect(reason)}")
       end
     end)
+  end
+
+  defp parse_args(args, config) do
+    {parsed, rest, _} =
+      OptionParser.parse(args, strict: [instance: :string], aliases: [i: :instance])
+
+    opts = if parsed[:instance], do: [instance: parsed[:instance]], else: []
+    servers = target_servers(rest, config)
+    {opts, servers}
   end
 
   defp target_servers([], config), do: config.servers
@@ -42,5 +55,6 @@ defmodule Mix.Tasks.Sysd.Status do
     end
   end
 
-  defp target_servers(_, _config), do: Mix.raise("Usage: mix sysd.status [SERVER]")
+  defp target_servers(_, _config),
+    do: Mix.raise("Usage: mix sysd.status [SERVER] [--instance NAME]")
 end

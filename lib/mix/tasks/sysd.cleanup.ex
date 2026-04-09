@@ -22,7 +22,12 @@ defmodule Mix.Tasks.Sysd.Cleanup do
   def run(args) do
     Mix.Task.run("app.config")
 
-    case args do
+    {parsed, rest, _} =
+      OptionParser.parse(args, strict: [instance: :string], aliases: [i: :instance])
+
+    instance_opts = if parsed[:instance], do: [instance: parsed[:instance]], else: []
+
+    case rest do
       [server] ->
         config = Sysd.Config.load()
         app_name = Sysd.app_name()
@@ -33,9 +38,12 @@ defmodule Mix.Tasks.Sysd.Cleanup do
 
         Mix.shell().info("Cleaning up #{server}...")
 
-        case Sysd.Deploy.cleanup(server, app: app_name, config: config) do
+        case Sysd.Deploy.cleanup(server, [app: app_name, config: config] ++ instance_opts) do
           {:ok, :cleaned_up} ->
-            Sysd.Config.remove_server(config, server)
+            unless parsed[:instance] do
+              Sysd.Config.remove_server(config, server)
+            end
+
             Mix.shell().info("  Removed all Sysd files and config for #{server}")
 
           {:error, reason} ->
@@ -43,7 +51,7 @@ defmodule Mix.Tasks.Sysd.Cleanup do
         end
 
       _ ->
-        Mix.raise("Usage: mix sysd.cleanup SERVER")
+        Mix.raise("Usage: mix sysd.cleanup SERVER [--instance NAME]")
     end
   end
 end

@@ -35,9 +35,11 @@ defmodule Sysd.Config do
     * `:servers` — list of hostname strings
     * `:ssh` — map of SSH options (e.g. `%{user: "deploy"}`)
     * `:app` — app name (set when loading multi-app config)
+    * `:instances` — map of hostname to list of instance configs,
+      e.g. `%{"host1" => [%{name: "inst1", env: %{"PORT" => "4001"}}]}`
   """
 
-  defstruct servers: [], ssh: %{}, app: nil
+  defstruct servers: [], ssh: %{}, app: nil, instances: %{}
 
   @legacy_config_path "config/sysd.yaml"
   @walk_up_filename "sysd.yml"
@@ -141,10 +143,67 @@ defmodule Sysd.Config do
   exercise the parsing rules without round-tripping through disk.
   """
   def parse(data) when is_map(data) do
+    raw_servers = data["servers"] || []
+    {hostnames, instances} = parse_servers(raw_servers)
+
     %__MODULE__{
-      servers: data["servers"] || [],
-      ssh: Map.new(data["ssh"] || %{}, fn {k, v} -> {String.to_atom(k), v} end)
+      servers: hostnames,
+      ssh: Map.new(data["ssh"] || %{}, fn {k, v} -> {String.to_atom(k), v} end),
+      instances: instances
     }
+  end
+
+  @doc """
+  Return the list of instance configs for a given host.
+
+  Each instance is `%{name: String.t(), env: %{String.t() => String.t()}}`.
+  Returns `[]` when the host has no instances defined (legacy mode).
+  """
+  def instances_for_host(%__MODULE__{instances: instances}, host) do
+    Map.get(instances, host, [])
+  end
+
+  @doc """
+  Return the systemd service names for a host.
+
+  With instances: `["sysd_inst1", "sysd_inst2"]`.
+  Without instances (legacy): `[app_name]`.
+  """
+  def service_names(%__MODULE__{} = config, host, app_name) do
+    case instances_for_host(config, host) do
+      [] -> [to_string(app_name)]
+      instances -> Enum.map(instances, &"sysd_#{&1.name}")
+    end
+  end
+
+  defp parse_servers(servers) do
+    Enum.reduce(servers, {[], %{}}, fn entry, {hosts, inst_map} ->
+      case entry do
+        host when is_binary(host) ->
+          {hosts ++ [host], inst_map}
+
+        %{"host" => host} = map ->
+          instances =
+            (map["instances"] || [])
+            |> Enum.map(fn inst ->
+              %{
+                name: inst["instance_name"],
+                env: parse_env_vars(inst["environment_variables"] || %{})
+              }
+            end)
+
+          inst_map =
+            if instances == [],
+              do: inst_map,
+              else: Map.put(inst_map, host, instances)
+
+          {hosts ++ [host], inst_map}
+      end
+    end)
+  end
+
+  defp parse_env_vars(vars) when is_map(vars) do
+    Map.new(vars, fn {k, v} -> {to_string(k), to_string(v)} end)
   end
 
   defp parse_with_app(data, app) when is_binary(app) do

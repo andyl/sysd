@@ -16,12 +16,12 @@ defmodule Mix.Tasks.Sysd.Start do
     Mix.Task.run("app.config")
     config = Sysd.Config.load()
     app_name = Sysd.app_name()
-    servers = target_servers(args, config)
+    {opts, servers} = parse_args(args, config)
 
     Enum.each(servers, fn server ->
       Mix.shell().info("Starting #{server}...")
 
-      case Sysd.Deploy.start(server, app: app_name, config: config) do
+      case Sysd.Deploy.start(server, [app: app_name, config: config] ++ opts) do
         {:ok, :started} ->
           Mix.shell().info("  Started")
 
@@ -29,6 +29,15 @@ defmodule Mix.Tasks.Sysd.Start do
           Mix.shell().error("  Failed: #{inspect(reason)}")
       end
     end)
+  end
+
+  defp parse_args(args, config) do
+    {parsed, rest, _} =
+      OptionParser.parse(args, strict: [instance: :string], aliases: [i: :instance])
+
+    opts = if parsed[:instance], do: [instance: parsed[:instance]], else: []
+    servers = target_servers(rest, config)
+    {opts, servers}
   end
 
   defp target_servers([], config), do: config.servers
@@ -41,5 +50,6 @@ defmodule Mix.Tasks.Sysd.Start do
     end
   end
 
-  defp target_servers(_, _config), do: Mix.raise("Usage: mix sysd.start [SERVER]")
+  defp target_servers(_, _config),
+    do: Mix.raise("Usage: mix sysd.start [SERVER] [--instance NAME]")
 end

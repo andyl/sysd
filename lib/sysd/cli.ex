@@ -241,6 +241,13 @@ defmodule Sysd.CLI do
         long: "--config",
         help: "Path to config file",
         required: false
+      ],
+      instance: [
+        value_name: "INSTANCE",
+        short: "-i",
+        long: "--instance",
+        help: "Target a specific instance by name",
+        required: false
       ]
     ]
   end
@@ -257,7 +264,12 @@ defmodule Sysd.CLI do
   defp base_opts(parsed) do
     config = load_config(parsed)
     app = parsed.options[:app]
-    [app: app, config: config]
+    opts = [app: app, config: config]
+
+    case parsed.options[:instance] do
+      nil -> opts
+      instance -> opts ++ [instance: instance]
+    end
   end
 
   defp run_check(parsed) do
@@ -338,8 +350,15 @@ defmodule Sysd.CLI do
     host = parsed.args.host
 
     case Sysd.Deploy.status(host, base_opts(parsed)) do
-      {:ok, status} -> IO.puts("#{host}: #{status}")
-      {:error, reason} -> error_exit("Failed: #{inspect(reason)}")
+      {:ok, status} when is_binary(status) ->
+        IO.puts("#{host}: #{status}")
+
+      {:ok, status} when is_map(status) ->
+        IO.puts("#{host}:")
+        Enum.each(status, fn {svc, s} -> IO.puts("  #{svc}: #{s}") end)
+
+      {:error, reason} ->
+        error_exit("Failed: #{inspect(reason)}")
     end
   end
 
@@ -377,8 +396,17 @@ defmodule Sysd.CLI do
     opts = base_opts(parsed) ++ [lines: lines, seconds: seconds]
 
     case Sysd.Deploy.tail(host, opts) do
-      {:ok, output} -> IO.write(output)
-      {:error, reason} -> error_exit("Failed: #{inspect(reason)}")
+      {:ok, output} when is_binary(output) ->
+        IO.write(output)
+
+      {:ok, outputs} when is_map(outputs) ->
+        Enum.each(outputs, fn {svc, output} ->
+          IO.puts("--- #{svc} ---")
+          IO.write(output)
+        end)
+
+      {:error, reason} ->
+        error_exit("Failed: #{inspect(reason)}")
     end
   end
 

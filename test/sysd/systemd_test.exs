@@ -56,5 +56,45 @@ defmodule Sysd.SystemdTest do
       assert output =~ "Description=myapp"
       assert output =~ "User=deploy"
     end
+
+    test "accepts environment as a map and renders multiple Environment= lines" do
+      output =
+        Systemd.render(%{
+          app: "myapp",
+          user: "deploy",
+          environment: %{"PORT" => "4001", "PHX_SERVER" => "true"}
+        })
+
+      assert output =~ "Environment=PORT=4001"
+      assert output =~ "Environment=PHX_SERVER=true"
+      refute output =~ "Environment=%{"
+    end
+
+    test "accepts custom description" do
+      output = Systemd.render(%{app: "myapp", user: "deploy", description: "my_instance"})
+      assert output =~ "Description=my_instance"
+    end
+  end
+
+  describe "render_instance/3" do
+    test "renders service file for an instance" do
+      instance = %{name: "docpub1", env: %{"PORT" => "4001", "TITLE" => "DocPub 1"}}
+      output = Systemd.render_instance("docpub", "deploy", instance)
+
+      assert output =~ "Description=docpub1"
+      assert output =~ "User=deploy"
+      assert output =~ "Environment=PORT=4001"
+      assert output =~ "Environment=TITLE=DocPub 1"
+      assert output =~ "Environment=PHX_SERVER=true"
+      assert output =~ "ExecStart=/opt/sysd/docpub/current/bin/docpub start"
+    end
+
+    test "does not duplicate PHX_SERVER if already in env" do
+      instance = %{name: "inst1", env: %{"PHX_SERVER" => "false"}}
+      output = Systemd.render_instance("myapp", "deploy", instance)
+
+      assert output =~ "Environment=PHX_SERVER=false"
+      refute output =~ "Environment=PHX_SERVER=true"
+    end
   end
 end

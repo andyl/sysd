@@ -142,6 +142,139 @@ defmodule Sysd.ConfigTest do
     end
   end
 
+  describe "parse/1 - instances" do
+    test "parses servers with instances" do
+      data = %{
+        "servers" => [
+          %{
+            "host" => "host1",
+            "instances" => [
+              %{
+                "instance_name" => "app1",
+                "environment_variables" => %{"PORT" => 4001, "TITLE" => "App One"}
+              },
+              %{
+                "instance_name" => "app2",
+                "environment_variables" => %{"PORT" => 4002}
+              }
+            ]
+          }
+        ],
+        "ssh" => %{"user" => "deploy"}
+      }
+
+      config = Sysd.Config.parse(data)
+      assert config.servers == ["host1"]
+      assert map_size(config.instances) == 1
+
+      [inst1, inst2] = config.instances["host1"]
+      assert inst1.name == "app1"
+      assert inst1.env == %{"PORT" => "4001", "TITLE" => "App One"}
+      assert inst2.name == "app2"
+      assert inst2.env == %{"PORT" => "4002"}
+    end
+
+    test "parses mixed legacy and instance servers" do
+      data = %{
+        "servers" => [
+          "legacy-host",
+          %{
+            "host" => "instance-host",
+            "instances" => [
+              %{"instance_name" => "inst1", "environment_variables" => %{"PORT" => 4001}}
+            ]
+          }
+        ],
+        "ssh" => %{"user" => "deploy"}
+      }
+
+      config = Sysd.Config.parse(data)
+      assert config.servers == ["legacy-host", "instance-host"]
+      assert config.instances["legacy-host"] == nil
+      assert length(config.instances["instance-host"]) == 1
+    end
+
+    test "server map without instances gets empty instance list" do
+      data = %{
+        "servers" => [%{"host" => "host1"}],
+        "ssh" => %{"user" => "deploy"}
+      }
+
+      config = Sysd.Config.parse(data)
+      assert config.servers == ["host1"]
+      assert config.instances == %{}
+    end
+  end
+
+  describe "instances_for_host/2" do
+    test "returns instances for a host with instances" do
+      config = %Sysd.Config{
+        servers: ["host1"],
+        instances: %{"host1" => [%{name: "inst1", env: %{"PORT" => "4001"}}]}
+      }
+
+      assert [%{name: "inst1"}] = Sysd.Config.instances_for_host(config, "host1")
+    end
+
+    test "returns empty list for a legacy host" do
+      config = %Sysd.Config{servers: ["host1"], instances: %{}}
+      assert Sysd.Config.instances_for_host(config, "host1") == []
+    end
+  end
+
+  describe "service_names/3" do
+    test "returns instance service names for a host with instances" do
+      config = %Sysd.Config{
+        servers: ["host1"],
+        instances: %{
+          "host1" => [
+            %{name: "docpub1", env: %{}},
+            %{name: "docpub2", env: %{}}
+          ]
+        }
+      }
+
+      assert Sysd.Config.service_names(config, "host1", "docpub") == [
+               "sysd_docpub1",
+               "sysd_docpub2"
+             ]
+    end
+
+    test "returns app name for a legacy host" do
+      config = %Sysd.Config{servers: ["host1"], instances: %{}}
+      assert Sysd.Config.service_names(config, "host1", "myapp") == ["myapp"]
+    end
+  end
+
+  describe "load/1 - instances from YAML" do
+    test "loads config with instances from file" do
+      path = Path.join(@fixture_dir, "instances.yml")
+
+      File.write!(path, """
+      servers:
+        - host: web1
+          instances:
+            - instance_name: app_a
+              environment_variables:
+                PORT: 4001
+                DATA_DIR: /data/a
+            - instance_name: app_b
+              environment_variables:
+                PORT: 4002
+      ssh:
+        user: deploy
+      """)
+
+      assert {:ok, config} = Sysd.Config.load(config_path: path)
+      assert config.servers == ["web1"]
+      assert [inst_a, inst_b] = config.instances["web1"]
+      assert inst_a.name == "app_a"
+      assert inst_a.env["PORT"] == "4001"
+      assert inst_a.env["DATA_DIR"] == "/data/a"
+      assert inst_b.name == "app_b"
+    end
+  end
+
   defp load_fixture do
     data = YamlElixir.read_from_file!(@fixture_path)
     Sysd.Config.parse(data)

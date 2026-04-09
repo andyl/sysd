@@ -26,8 +26,8 @@ defmodule Sysd.Remote do
     SSH.run!(conn, "sudo systemctl enable #{app_name}")
   end
 
-  @doc "Upload a release tarball, extract it, update the symlink, and start/restart the service."
-  def deploy(conn, app_name, local_tar_path, version) do
+  @doc "Upload a release tarball, extract it, and update the symlink (no service restart)."
+  def deploy_release(conn, app_name, local_tar_path, version) do
     remote_archive = "#{Sysd.archives_path(app_name)}/#{version}.tar.gz"
     remote_release = "#{Sysd.releases_path(app_name)}/#{version}"
 
@@ -38,13 +38,22 @@ defmodule Sysd.Remote do
     SSH.run!(conn, "sudo mkdir -p #{remote_release}")
     SSH.run!(conn, "sudo tar -xzf #{remote_archive} -C #{remote_release}")
     SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Sysd.current_path(app_name)}")
+  end
 
-    case SSH.run(conn, "sudo systemctl is-active #{app_name}") do
+  @doc "Upload a release tarball, extract it, update the symlink, and start/restart the service."
+  def deploy(conn, app_name, local_tar_path, version) do
+    deploy_release(conn, app_name, local_tar_path, version)
+    restart_or_start(conn, app_name)
+  end
+
+  @doc "Start or restart a service depending on whether it is already active."
+  def restart_or_start(conn, service_name) do
+    case SSH.run(conn, "sudo systemctl is-active #{service_name}") do
       {:ok, _, 0} ->
-        SSH.run!(conn, "sudo systemctl restart #{app_name}")
+        SSH.run!(conn, "sudo systemctl restart #{service_name}")
 
       _ ->
-        SSH.run!(conn, "sudo systemctl start #{app_name}")
+        SSH.run!(conn, "sudo systemctl start #{service_name}")
     end
   end
 
@@ -171,6 +180,29 @@ defmodule Sysd.Remote do
     SSH.run(conn, "sudo systemctl stop #{app_name}")
     SSH.run(conn, "sudo systemctl disable #{app_name}")
     SSH.run(conn, "sudo rm -f /etc/systemd/system/#{app_name}.service")
+    SSH.run(conn, "sudo systemctl daemon-reload")
+    SSH.run!(conn, "sudo rm -rf #{Sysd.app_path(app_name)}")
+  end
+
+  @doc "Stop and remove a single instance service file (does not remove app files)."
+  def cleanup_instance(conn, service_name) do
+    SSH.run(conn, "sudo systemctl stop #{service_name}")
+    SSH.run(conn, "sudo systemctl disable #{service_name}")
+    SSH.run(conn, "sudo rm -f /etc/systemd/system/#{service_name}.service")
+    SSH.run(conn, "sudo systemctl daemon-reload")
+  end
+
+  @doc "Stop and remove all sysd_* service files, then delete app files from the server."
+  def cleanup_all_instances(conn, app_name) do
+    SSH.run(
+      conn,
+      "for svc in /etc/systemd/system/sysd_*.service; do " <>
+        "name=$(basename $svc .service); " <>
+        "sudo systemctl stop $name 2>/dev/null; " <>
+        "sudo systemctl disable $name 2>/dev/null; " <>
+        "sudo rm -f $svc; done"
+    )
+
     SSH.run(conn, "sudo systemctl daemon-reload")
     SSH.run!(conn, "sudo rm -rf #{Sysd.app_path(app_name)}")
   end
