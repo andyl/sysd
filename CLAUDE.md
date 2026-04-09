@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Release Deployer (package: `release_deployer`, Mix tasks: `sysd.*`, escript: `sysd`) is a minimalist Elixir tool for deploying Elixir Releases to bare metal servers over SSH. It targets LAN/internal deployments using Mix tasks as the CLI, SSHex for SSH, and systemd for service management on remote servers. Design spec lives in `_spec/designs/`.
+Sysd (package: `sysd`, Mix tasks: `sysd.*`, escript: `sysd`) is a minimalist Elixir tool for deploying Elixir Releases to bare metal servers over SSH. It targets LAN/internal deployments using Mix tasks as the CLI, SSHex for SSH, and systemd for service management on remote servers. Design spec lives in `_spec/designs/`.
 
 ## Common Commands
 

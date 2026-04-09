@@ -5,18 +5,18 @@ defmodule Sysd.MixProject do
 
   def project do
     [
-      app: :release_deployer,
+      app: :sysd,
       version: @version,
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       licenses: ["MIT"],
       docs: docs(),
       package: [
-        name: "release_deployer",
+        name: "sysd",
         licenses: ["MIT"],
         links: %{
-          "GitHub" => "https://github.com/andyl/release_deployer",
-          "Docs" => "https://hexdocs.pm/release_deployer"
+          "GitHub" => "https://github.com/andyl/sysd",
+          "Docs" => "https://hexdocs.pm/sysd"
         },
         files: ~w(lib mix.exs README.md CHANGELOG.md LICENSE)
       ],
@@ -35,7 +35,7 @@ defmodule Sysd.MixProject do
     [
       main: "readme",
       extras: [{"README.md", title: "Overview"}],
-      source_url: "https://github.com/andyl/release_deployer",
+      source_url: "https://github.com/andyl/sysd",
       source_ref: "v#{@version}"
     ]
   end

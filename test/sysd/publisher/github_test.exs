@@ -5,23 +5,23 @@ defmodule Sysd.Publisher.GithubTest do
 
   describe "origin_repo/1" do
     test "parses an https URL without .git" do
-      assert {:ok, "andyl/release_deployer"} =
-               Util.origin_repo("https://github.com/andyl/release_deployer")
+      assert {:ok, "andyl/sysd"} =
+               Util.origin_repo("https://github.com/andyl/sysd")
     end
 
     test "parses an https URL with .git" do
-      assert {:ok, "andyl/release_deployer"} =
-               Util.origin_repo("https://github.com/andyl/release_deployer.git")
+      assert {:ok, "andyl/sysd"} =
+               Util.origin_repo("https://github.com/andyl/sysd.git")
     end
 
     test "parses a git@ ssh URL without .git" do
-      assert {:ok, "andyl/release_deployer"} =
-               Util.origin_repo("git@github.com:andyl/release_deployer")
+      assert {:ok, "andyl/sysd"} =
+               Util.origin_repo("git@github.com:andyl/sysd")
     end
 
     test "parses a git@ ssh URL with .git" do
-      assert {:ok, "andyl/release_deployer"} =
-               Util.origin_repo("git@github.com:andyl/release_deployer.git")
+      assert {:ok, "andyl/sysd"} =
+               Util.origin_repo("git@github.com:andyl/sysd.git")
     end
 
     test "strips surrounding whitespace" do

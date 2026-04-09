@@ -1,4 +1,4 @@
-# Release Deployer
+# Sysd
 
 Deploy Elixir Releases to bare metal servers over SSH as systemd services.
 A minimalist deployment workflow targeting LAN/internal environments, using
@@ -22,12 +22,12 @@ Non-Goals
 ## Installation
 
 The package can be installed
-by adding `release_deployer` to your list of dependencies in `mix.exs`:
+by adding `sysd` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:release_deployer, "~> 0.3.0"}
+    {:sysd, "~> 0.3.0"}
   ]
 end
 ```

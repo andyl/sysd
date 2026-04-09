@@ -28,7 +28,7 @@ third-party applications where a published tarball exists but the
 source is not local.
 
 ```
-curl -L https://github.com/andyl/release_deployer/releases/download/v0.3.0/sysd \
+curl -L https://github.com/andyl/sysd/releases/download/v0.3.0/sysd \
   -o ~/.local/bin/sysd
 chmod +x ~/.local/bin/sysd
 ```

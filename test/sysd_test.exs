@@ -2,7 +2,7 @@ defmodule SysdTest do
   use ExUnit.Case
 
   test "app_name returns the application name" do
-    assert Sysd.app_name() == :release_deployer
+    assert Sysd.app_name() == :sysd
   end
 
   test "version returns a version string" do
@@ -11,7 +11,7 @@ defmodule SysdTest do
 
   test "release_tar_path includes app name and version" do
     path = Sysd.release_tar_path()
-    assert path =~ "release_deployer"
+    assert path =~ "sysd"
     assert path =~ ".tar.gz"
   end
 
@@ -20,7 +20,7 @@ defmodule SysdTest do
   end
 
   test "tarball_basename has the expected shape" do
-    assert Sysd.tarball_basename() == "release_deployer-#{Sysd.version()}.tar.gz"
+    assert Sysd.tarball_basename() == "sysd-#{Sysd.version()}.tar.gz"
   end
 
   test "build_host returns a non-empty string" do
