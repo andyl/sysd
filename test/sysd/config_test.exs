@@ -36,7 +36,6 @@ defmodule Sysd.ConfigTest do
 
     assert config.servers == ["host1", "host2"]
     assert config.ssh[:user] == "deploy"
-    assert Sysd.Config.publishers(config) == []
   end
 
   test "write/1 writes config back to YAML" do
@@ -62,72 +61,6 @@ defmodule Sysd.ConfigTest do
     updated = %{config | servers: Enum.reject(config.servers, &(&1 == "host1"))}
 
     assert updated.servers == ["host2"]
-  end
-
-  describe "parse/1 - release.publish" do
-    test "returns empty publisher list when release block is missing" do
-      config = Sysd.Config.parse(%{"servers" => ["h1"], "ssh" => %{"user" => "u"}})
-      assert Sysd.Config.publishers(config) == []
-    end
-
-    test "parses a github publisher with defaults" do
-      config =
-        Sysd.Config.parse(%{
-          "release" => %{"publish" => [%{"type" => "github"}]}
-        })
-
-      assert [%{type: :github, draft: false, prerelease: false}] =
-               Sysd.Config.publishers(config)
-    end
-
-    test "parses github draft/prerelease flags" do
-      config =
-        Sysd.Config.parse(%{
-          "release" => %{
-            "publish" => [%{"type" => "github", "draft" => true, "prerelease" => true}]
-          }
-        })
-
-      assert [%{type: :github, draft: true, prerelease: true}] =
-               Sysd.Config.publishers(config)
-    end
-
-    test "parses a file publisher" do
-      config =
-        Sysd.Config.parse(%{
-          "release" => %{
-            "publish" => [%{"type" => "file", "path" => "/mnt/releases/app/"}]
-          }
-        })
-
-      assert [%{type: :file, path: "/mnt/releases/app/"}] =
-               Sysd.Config.publishers(config)
-    end
-
-    test "parses a mixed publisher list in order" do
-      config =
-        Sysd.Config.parse(%{
-          "release" => %{
-            "publish" => [
-              %{"type" => "github"},
-              %{"type" => "file", "path" => "/tmp/rel/"}
-            ]
-          }
-        })
-
-      assert [
-               %{type: :github},
-               %{type: :file, path: "/tmp/rel/"}
-             ] = Sysd.Config.publishers(config)
-    end
-
-    test "raises on unknown publisher type" do
-      assert_raise ArgumentError, ~r/Unknown publisher type/, fn ->
-        Sysd.Config.parse(%{
-          "release" => %{"publish" => [%{"type" => "s3"}]}
-        })
-      end
-    end
   end
 
   describe "load/1 - precedence chain" do

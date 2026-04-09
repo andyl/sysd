@@ -52,7 +52,7 @@ defmodule Sysd.Remote do
   Write a `RELEASE_INFO` file into the remote release directory for
   an app/version. The file is a simple `key=value` text document used
   for incident debugging — expected keys include `git_sha`,
-  `build_host`, `build_timestamp`, and optionally `publisher_url`.
+  `build_host`, and `build_timestamp`.
   """
   def write_release_info(conn, app_name, version, info) when is_map(info) do
     body = format_release_info(info)

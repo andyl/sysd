@@ -5,69 +5,43 @@ defmodule Mix.Tasks.Sysd.Deploy do
   Push an existing release tarball to each configured server.
 
       $ MIX_ENV=prod mix sysd.deploy
-      $ MIX_ENV=prod mix sysd.deploy --from-release
 
   ## Behavior
 
-    1. If no local tarball exists for `@version`, invoke
-       `mix sysd.release` to build one (the default path). This
-       will also run any configured publishers — pass
-       `--no-publish` to `sysd.release` directly if that is not
-       desired.
-    2. With `--from-release`, instead fetch the tarball for
-       `@version` from the first configured publisher that supports
-       fetching. This enables deploying from a machine that did not
-       build the artifact.
-    3. For each server in `config/sysd.yaml`:
+    1. If no local tarball exists for `@version`, build one by running
+       `mix assets.deploy` followed by `mix release`.
+    2. For each server in `config/sysd.yaml`:
        - Upload the tarball to `/opt/sysd/<appname>/archives/<version>.tar.gz`
        - Extract it to `/opt/sysd/<appname>/releases/<version>/`
        - Update the `/opt/sysd/<appname>/current` symlink
        - Start or restart the systemd service
        - Write `/opt/sysd/<appname>/releases/<version>/RELEASE_INFO`
-         recording the git sha, build host, timestamp, and (if used)
-         the publisher URL.
+         recording the git sha, build host, and timestamp.
 
   The service will be briefly offline during the deploy.
 
   Run `mix sysd.setup` before your first deployment to prepare the
   remote servers.
-
-  ## Flags
-
-    * `--from-release` — fetch the tarball from the first fetch-capable
-      publisher instead of building locally.
   """
   use Mix.Task
 
   alias Sysd.{Config, SSH, Remote}
 
   @impl Mix.Task
-  def run(args) do
-    {opts, _, _} = OptionParser.parse(args, switches: [from_release: :boolean])
-    from_release? = Keyword.get(opts, :from_release, false)
-
+  def run(_args) do
     config = Config.load()
     app_name = Sysd.app_name()
     version = Sysd.version()
     tar_path = Sysd.release_tar_path()
-    publishers = Config.publishers(config)
-
-    publisher_url =
-      cond do
-        File.exists?(tar_path) and not from_release? ->
-          nil
-
-        from_release? ->
-          fetch_from_publisher(publishers, app_name, version, tar_path)
-
-        true ->
-          Mix.shell().info("No local tarball for #{version}; invoking `mix sysd.release`...")
-          Mix.Task.run("sysd.release", [])
-          nil
-      end
 
     unless File.exists?(tar_path) do
-      Mix.raise("Release tarball not found after release step: #{tar_path}")
+      Mix.shell().info("No local tarball for #{version}; building release...")
+      Mix.Task.run("assets.deploy", [])
+      Mix.Task.run("release", [])
+    end
+
+    unless File.exists?(tar_path) do
+      Mix.raise("Release tarball not found: #{tar_path}")
     end
 
     release_info = %{
@@ -75,8 +49,7 @@ defmodule Mix.Tasks.Sysd.Deploy do
       version: version,
       git_sha: Sysd.git_sha(),
       build_host: Sysd.build_host(),
-      build_timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
-      publisher_url: publisher_url
+      build_timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
     Enum.each(config.servers, fn server ->
@@ -88,23 +61,5 @@ defmodule Mix.Tasks.Sysd.Deploy do
 
       Mix.shell().info("  Deployed successfully")
     end)
-  end
-
-  defp fetch_from_publisher([], _app, _version, _tar_path) do
-    Mix.raise("--from-release was passed but no publishers are configured in config/sysd.yaml")
-  end
-
-  defp fetch_from_publisher(publishers, app_name, version, tar_path) do
-    dest_dir = Path.dirname(tar_path)
-    Mix.shell().info("Fetching #{app_name} #{version} from configured publishers...")
-
-    case Sysd.Publisher.fetch_first(publishers, app_name, version, dest_dir) do
-      {:ok, url} ->
-        if url, do: Mix.shell().info("  fetched: #{url}")
-        url
-
-      {:error, reasons} ->
-        Mix.raise("Fetch failed from all publishers:\n  - " <> Enum.join(reasons, "\n  - "))
-    end
   end
 end

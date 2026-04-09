@@ -7,7 +7,6 @@ defmodule Mix.Tasks.SysdTest do
     output = capture_io(fn -> Mix.Tasks.Sysd.run([]) end)
     assert output =~ "Sysd - Deploy Elixir releases"
     assert output =~ "mix sysd.init"
-    assert output =~ "mix sysd.release"
     assert output =~ "mix sysd.deploy"
     assert output =~ "mix sysd.rollback"
     assert output =~ "mix sysd.cleanup"

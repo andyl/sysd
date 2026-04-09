@@ -14,7 +14,6 @@ defmodule Mix.Tasks.Sysd do
   | `mix sysd.init`              | Generate config stubs                |
   | `mix sysd.sshcheck`          | Check SSH connection and permissions |
   | `mix sysd.setup`             | Setup servers for deployment         |
-  | `mix sysd.release`           | Build release tarball and publish    |
   | `mix sysd.deploy`            | Deploy a release to servers          |
   | `mix sysd.versions`          | List release versions on servers     |
   | `mix sysd.rollback VERSION`  | Rollback to a previous version       |
@@ -35,7 +34,6 @@ defmodule Mix.Tasks.Sysd do
       mix sysd.init                Generate config stubs
       mix sysd.sshcheck            Check SSH connection and permissions
       mix sysd.setup               Setup servers for deployment
-      mix sysd.release             Build release tarball and publish
       mix sysd.deploy              Deploy a release to servers
       mix sysd.versions            List release versions on servers
       mix sysd.rollback [VERSION]  Rollback to a previous version

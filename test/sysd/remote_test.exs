@@ -9,7 +9,6 @@ defmodule Sysd.RemoteTest do
         git_sha: "abc123",
         build_host: "laptop",
         build_timestamp: "2026-04-07T12:00:00Z",
-        publisher_url: nil
       })
 
     assert body =~ "app=myapp"
@@ -17,6 +16,5 @@ defmodule Sysd.RemoteTest do
     assert body =~ "git_sha=abc123"
     assert body =~ "build_host=laptop"
     assert body =~ "build_timestamp=2026-04-07T12:00:00Z"
-    assert body =~ "publisher_url="
   end
 end

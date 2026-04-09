@@ -34,11 +34,10 @@ defmodule Sysd.Config do
 
     * `:servers` — list of hostname strings
     * `:ssh` — map of SSH options (e.g. `%{user: "deploy"}`)
-    * `:release` — map with a `:publish` key holding publisher specs
     * `:app` — app name (set when loading multi-app config)
   """
 
-  defstruct servers: [], ssh: %{}, release: %{publish: []}, app: nil
+  defstruct servers: [], ssh: %{}, app: nil
 
   @legacy_config_path "config/sysd.yaml"
   @walk_up_filename "sysd.yml"
@@ -144,8 +143,7 @@ defmodule Sysd.Config do
   def parse(data) when is_map(data) do
     %__MODULE__{
       servers: data["servers"] || [],
-      ssh: Map.new(data["ssh"] || %{}, fn {k, v} -> {String.to_atom(k), v} end),
-      release: %{publish: parse_publishers(get_in(data, ["release", "publish"]) || [])}
+      ssh: Map.new(data["ssh"] || %{}, fn {k, v} -> {String.to_atom(k), v} end)
     }
   end
 
@@ -162,38 +160,10 @@ defmodule Sysd.Config do
 
   defp parse_with_app(data, nil), do: parse(data)
 
-  defp parse_publishers(list) when is_list(list) do
-    Enum.map(list, &parse_publisher/1)
-  end
-
-  defp parse_publisher(%{"type" => "github"} = entry) do
-    %{
-      type: :github,
-      draft: Map.get(entry, "draft", false),
-      prerelease: Map.get(entry, "prerelease", false)
-    }
-  end
-
-  defp parse_publisher(%{"type" => "file"} = entry) do
-    %{
-      type: :file,
-      path: Map.get(entry, "path")
-    }
-  end
-
-  defp parse_publisher(%{"type" => other}) do
-    raise ArgumentError, "Unknown publisher type: #{inspect(other)}"
-  end
-
-  defp parse_publisher(other) do
-    raise ArgumentError, "Invalid publisher entry: #{inspect(other)}"
-  end
-
   @doc """
   Write a `%Sysd.Config{}` struct back to the YAML config file.
 
-  Creates the parent directory if it does not exist. Note: this does
-  **not** round-trip the `release.publish` block.
+  Creates the parent directory if it does not exist.
   """
   def write(%__MODULE__{} = config) do
     yaml =
@@ -218,10 +188,4 @@ defmodule Sysd.Config do
     write(updated)
     updated
   end
-
-  @doc """
-  Return the ordered list of publisher specs from a loaded config.
-  """
-  def publishers(%__MODULE__{release: %{publish: list}}), do: list
-  def publishers(%__MODULE__{}), do: []
 end

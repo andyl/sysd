@@ -7,7 +7,7 @@ management.
 
 Goals
 
-- Provide a complete CLI via Mix tasks for the full deployment lifecycle
+- Provide a complete CLI via Mix tasks and a standalone escript
 - Support multi-server deployments configured through a simple YAML file
 - Use systemd for reliable service management on remote servers
 - Keep the tool minimal with no proxy, SSL provisioning, or complex orchestration
@@ -21,8 +21,9 @@ Non-Goals
 
 ## Installation
 
-The package can be installed
-by adding `sysd` to your list of dependencies in `mix.exs`:
+### Mix dependency (project-local)
+
+Add `sysd` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -31,6 +32,48 @@ def deps do
   ]
 end
 ```
+
+This gives you access to `mix sysd.*` tasks inside your project. App
+name and version come from `mix.exs` — no duplication needed.
+
+### Escript (system-wide)
+
+A standalone `sysd` binary installed once per machine. Useful for
+deploying third-party applications where a published tarball exists
+but the source is not local. The Erlang runtime is the only
+dependency.
+
+```
+curl -L https://github.com/andyl/sysd/releases/download/v0.3.0/sysd \
+  -o ~/.local/bin/sysd
+chmod +x ~/.local/bin/sysd
+```
+
+## Escript CLI
+
+The escript uses a subcommand structure. Every command is usable with
+pure CLI args and no config file.
+
+```
+sysd deploy <host> <tarball-ref> --app myapp --user deploy
+sysd check <host>
+sysd versions <host> <app>
+sysd rollback <host> <app> [<version>]
+sysd status <host> <app>
+sysd start|stop|restart <host> <app>
+sysd logs <host> <app>
+sysd tail <host> <app>
+sysd remove <host> <app>
+sysd cleanup <host> <app>
+```
+
+### Tarball References
+
+The `<tarball-ref>` argument accepts these schemes:
+
+- `file:///path/to/app-0.2.1.tar.gz` — local file
+- `gh://owner/repo@v0.2.1` — fetches via `gh release download`
+- `./app-0.2.1.tar.gz` — bare path, treated as `file:`
 
 ## Mix Tasks
 
@@ -54,34 +97,18 @@ Perform first-time server setup and initial deploy for each server:
 - Create the `/opt/sysd/<appname>` directory structure
 - Run the deploy workflow (see sysd.deploy)
 
-### sysd.release
-
-Build a production release tarball and optionally publish it to the
-configured publishers:
-- Verify that the `v<@version>` git tag exists locally (create it with
-  `mix git_ops.release`)
-- Run publisher preflight checks up front so misconfiguration fails fast
-- Skip the build if a tarball for `@version` already exists, unless
-  `--force` is passed
-- Otherwise run `mix assets.deploy` followed by `mix release`
-- Invoke each configured publisher in order
-
-Flags: `--force`, `--replace`, `--no-publish`.
-
 ### sysd.deploy
 
-Push an existing release tarball to every configured server:
-- If no local tarball exists for `@version`, invoke `mix sysd.release`
-  to build one (the default path)
-- With `--from-release`, fetch the tarball for `@version` from the first
-  fetch-capable publisher — useful for deploying from a fresh checkout
+Push a release tarball to every configured server:
+- If no local tarball exists for `@version`, build one by running
+  `mix assets.deploy` followed by `mix release`
 - For each server:
   - Copy the tarball to `/opt/sysd/<appname>/archives/<version>.tar.gz`
   - Extract the release to `/opt/sysd/<appname>/releases/<version>`
   - Update the symlink `/opt/sysd/<appname>/current` to point to the new release
   - Start or restart the systemd service
   - Write `/opt/sysd/<appname>/releases/<version>/RELEASE_INFO` with
-    the git sha, build host, timestamp, and publisher URL (if used)
+    the git sha, build host, and timestamp
 
 ### sysd.versions
 
@@ -118,43 +145,13 @@ servers:
   - host2
 ssh:
   user: <name>
-
-# Optional. Publishers run in order during `mix sysd.release` and are
-# walked in order for `mix sysd.deploy --from-release`. Omit the
-# `release.publish` block entirely for a local-only build.
-release:
-  publish:
-    - type: github
-      draft: false
-      prerelease: false
-    - type: file
-      path: /mnt/releases/myapp/
 ```
 
-### Publishers
-
-Two publisher types ship out of the box:
-
-- **`github`** — uses the `gh` CLI to upload the tarball as a release
-  asset on the `v<@version>` tag. Requires `gh` on `$PATH`, a valid
-  `gh auth status`, and a `github.com` origin remote.
-- **`file`** — copies the tarball to `<path>/<app>-<version>.tar.gz`.
-  Useful for NFS shares, static web directories, or local archive
-  folders. The target directory must already exist and be writable.
-
-Typical flow:
+## Typical Flow
 
 ```
 mix git_ops.release                    # bump version, create v<x.y.z>
-MIX_ENV=prod mix sysd.release          # build and publish
-MIX_ENV=prod mix sysd.deploy           # push to servers
-```
-
-Deploying from a fresh checkout with no local build:
-
-```
-git checkout v0.3.0
-MIX_ENV=prod mix sysd.deploy --from-release
+MIX_ENV=prod mix sysd.deploy           # build and push to servers
 ```
 
 ## Remote Server Layout
