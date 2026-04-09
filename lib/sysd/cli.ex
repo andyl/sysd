@@ -46,9 +46,6 @@ defmodule Sysd.CLI do
       {:ok, [:restart], parsed} ->
         run_restart(parsed)
 
-      {:ok, [:logs], parsed} ->
-        run_logs(parsed)
-
       {:ok, [:tail], parsed} ->
         run_tail(parsed)
 
@@ -86,6 +83,22 @@ defmodule Sysd.CLI do
           about: "Check SSH connectivity and permissions",
           args: [host: [value_name: "HOST", help: "Server hostname", required: true]],
           options: common_options()
+        ],
+        setup: [
+          name: "setup",
+          about: "Setup server directories and install systemd service",
+          args: [host: [value_name: "HOST", help: "Server hostname", required: true]],
+          options:
+            common_options() ++
+              [
+                user: [
+                  value_name: "USER",
+                  short: "-u",
+                  long: "--user",
+                  help: "System user for the service (default: deploy)",
+                  required: false
+                ]
+              ]
         ],
         deploy: [
           name: "deploy",
@@ -149,23 +162,6 @@ defmodule Sysd.CLI do
           args: [host: [value_name: "HOST", help: "Server hostname", required: true]],
           options: common_options()
         ],
-        logs: [
-          name: "logs",
-          about: "Show recent journal logs",
-          args: [host: [value_name: "HOST", help: "Server hostname", required: true]],
-          options:
-            common_options() ++
-              [
-                lines: [
-                  value_name: "LINES",
-                  short: "-n",
-                  long: "--lines",
-                  help: "Number of lines (default: 50)",
-                  parser: :integer,
-                  required: false
-                ]
-              ]
-        ],
         tail: [
           name: "tail",
           about: "Tail journal logs (time-bounded)",
@@ -205,22 +201,6 @@ defmodule Sysd.CLI do
           about: "Remove all Sysd files from a server",
           args: [host: [value_name: "HOST", help: "Server hostname", required: true]],
           options: common_options()
-        ],
-        setup: [
-          name: "setup",
-          about: "Setup server directories and install systemd service",
-          args: [host: [value_name: "HOST", help: "Server hostname", required: true]],
-          options:
-            common_options() ++
-              [
-                user: [
-                  value_name: "USER",
-                  short: "-u",
-                  long: "--user",
-                  help: "System user for the service (default: deploy)",
-                  required: false
-                ]
-              ]
         ],
         systemd: [
           name: "systemd",
@@ -387,17 +367,6 @@ defmodule Sysd.CLI do
     case Sysd.Deploy.restart(host, base_opts(parsed)) do
       {:ok, :restarted} -> IO.puts("#{host}: restarted")
       {:error, reason} -> error_exit("Restart failed: #{reason}")
-    end
-  end
-
-  defp run_logs(parsed) do
-    host = parsed.args.host
-    lines = parsed.options[:lines] || 50
-    opts = base_opts(parsed) ++ [lines: lines]
-
-    case Sysd.Deploy.logs(host, opts) do
-      {:ok, output} -> IO.write(output)
-      {:error, reason} -> error_exit("Failed: #{inspect(reason)}")
     end
   end
 

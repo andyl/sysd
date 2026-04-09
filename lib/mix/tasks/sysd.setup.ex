@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Sysd.Setup do
     3. Enable the systemd service
 
   Run `mix sysd.init` first to generate the config, then
-  `mix sysd.sshcheck` to validate connectivity.
+  `mix sysd.check` to validate connectivity.
 
   After setup completes, run `mix sysd.deploy` to perform your first
   deployment.

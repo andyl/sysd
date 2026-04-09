@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Sysd.Init do
 
   The YAML config is pre-filled with a placeholder server and a default
   `deploy` user. Edit it to match your environment before running
-  `mix sysd.sshcheck`.
+  `mix sysd.check`.
 
   The systemd service file is rendered from an EEX template and can be
   customized before running `mix sysd.setup`.

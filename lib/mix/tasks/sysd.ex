@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Sysd do
   | ------------------------------ | ------------------------------------ |
   | `mix sysd`                     | This help message                    |
   | `mix sysd.init`                | Generate config stubs                |
-  | `mix sysd.sshcheck`            | Check SSH connection and permissions |
+  | `mix sysd.check`               | Check SSH connection and permissions |
   | `mix sysd.setup`               | Setup servers for deployment         |
   | `mix sysd.deploy`              | Deploy a release to servers          |
   | `mix sysd.versions`            | List release versions on servers     |
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Sysd do
     Mix Tasks:
       mix sysd                     This help message
       mix sysd.init                Generate config stubs
-      mix sysd.sshcheck            Check SSH connection and permissions
+      mix sysd.check               Check SSH connection and permissions
       mix sysd.setup               Setup servers for deployment
       mix sysd.deploy              Deploy a release to servers
       mix sysd.versions            List release versions on servers

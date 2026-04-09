@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Sysd.Sshcheck do
+defmodule Mix.Tasks.Sysd.Check do
   @shortdoc "Check SSH connection and permissions"
 
   @moduledoc """
   Verify SSH connectivity and permissions on all configured servers.
 
-      $ mix sysd.sshcheck
+      $ mix sysd.check
 
   For each server listed in `config/sysd.yaml`, this task will:
 

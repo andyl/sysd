@@ -83,7 +83,7 @@ Generate starter configuration files in the consumer project:
 - `config/sysd.yaml` with default server and SSH settings
 - `priv/sysd/<appname>.service` systemd service file as an EEX template
 
-### sysd.sshcheck
+### sysd.check
 
 Validate SSH connectivity and permissions on all configured servers:
 - Test SSH connection to each server

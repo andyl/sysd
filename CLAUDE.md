@@ -26,7 +26,7 @@ The project is structured as a Mix library that exposes Mix tasks (`mix sysd.*`)
 - **git_ops** — version management via conventional commits
 - **igniter** — code generation (dev/test only)
 
-Mix tasks: `sysd.init`, `sysd.sshcheck`, `sysd.setup`, `sysd.deploy`, `sysd.versions`, `sysd.rollback`, `sysd.remove`, `sysd.cleanup`.
+Mix tasks: `sysd.init`, `sysd.check`, `sysd.setup`, `sysd.deploy`, `sysd.versions`, `sysd.rollback`, `sysd.status`, `sysd.start`, `sysd.stop`, `sysd.restart`, `sysd.tail`, `sysd.remove`, `sysd.cleanup`.
 
 Mix tasks should live under `lib/mix/tasks/sysd.*.ex`. Config is YAML-based at `config/sysd.yaml` in consumer projects. Remote server layout uses `/opt/sysd/<appname>/{archives,releases,current}`.
 
