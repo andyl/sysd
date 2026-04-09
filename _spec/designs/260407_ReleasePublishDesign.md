@@ -1,5 +1,9 @@
 # Release & Publish Design
 
+> **Note (2026-04-09):** Publishing has moved to a separate project at
+> `../release_publisher`. This document is retained as historical
+> context for the design decisions that led to the split.
+
 Splits the current `mix reldep.deploy` into two tasks and adds optional
 publishing of release tarballs to external artifact stores (GitHub
 Releases first, with a pluggable shape for S3/SCP/etc. later).
