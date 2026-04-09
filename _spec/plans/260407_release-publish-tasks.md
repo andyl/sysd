@@ -29,7 +29,7 @@ pluggable publisher system with two initial implementations: `github`
 - Idempotency: tarball existence check, publisher "already exists" check.
 - Updates to existing tests, plus new tests for config parsing, publisher
   modules, and task argument parsing.
-- README / moduledoc / `mix relman` help output updates.
+- README / moduledoc / `mix sysd` help output updates.
 
 ### Out of scope
 - Publisher types other than `github` and `file` (the behaviour shape
@@ -113,7 +113,7 @@ pluggable publisher system with two initial implementations: `github`
 ## Implementation Steps
 
 1. **Extend `Sysd.Config` to parse `release.publish`.**
-   - Files: `lib/relman/config.ex`, `test/relman/config_test.exs`
+   - Files: `lib/sysd/config.ex`, `test/sysd/config_test.exs`
    - Add `release: %{publish: []}` to the struct default.
    - In `load/0`, parse `data["release"]["publish"]` into a list of
      normalized maps: `%{type: :github, draft: bool, prerelease: bool}`
@@ -124,7 +124,7 @@ pluggable publisher system with two initial implementations: `github`
      mixed; unknown `type` raises.
 
 2. **Add `Sysd` helper functions.**
-   - Files: `lib/sysd.ex`, `test/relman_test.exs`
+   - Files: `lib/sysd.ex`, `test/sysd_test.exs`
    - Add `version_tag/0`, `tarball_basename/0`, `git_sha/0`,
      `git_tag_exists?/1`, `build_host/0`.
    - `git_sha/0` and `git_tag_exists?/1` wrap `System.cmd/3`.
@@ -133,7 +133,7 @@ pluggable publisher system with two initial implementations: `github`
      avoid depending on repo state.
 
 3. **Define the `Sysd.Publisher` behaviour.**
-   - Files: `lib/relman/publisher.ex` (new)
+   - Files: `lib/sysd/publisher.ex` (new)
    - Callbacks:
      - `@callback preflight(spec :: map()) :: :ok | {:error, String.t()}`
      - `@callback publish(spec :: map(), tar :: Path.t(), app :: atom(), version :: String.t()) :: {:ok, String.t() | nil} | {:error, String.t()}` — `{:ok, url}` where `url` is the publisher URL if one exists.
@@ -145,7 +145,7 @@ pluggable publisher system with two initial implementations: `github`
      - `fetch_first(specs, app, version, dest)` → walks specs, returns first `{:ok, url}`.
 
 4. **Implement `Sysd.Publisher.File`.**
-   - Files: `lib/relman/publisher/file.ex` (new), `test/relman/publisher/file_test.exs` (new)
+   - Files: `lib/sysd/publisher/file.ex` (new), `test/sysd/publisher/file_test.exs` (new)
    - `preflight/1`: assert `:path` set, absolute, exists, writable.
      If `<path>/<app>-<version>.tar.gz` exists, require `opts[:replace]`.
      (Pass `replace` via the spec map mutated by the task layer, or
@@ -157,7 +157,7 @@ pluggable publisher system with two initial implementations: `github`
      existing file with and without replace, publish + fetch round-trip.
 
 5. **Implement `Sysd.Publisher.Github`.**
-   - Files: `lib/relman/publisher/github.ex` (new), `test/relman/publisher/github_test.exs` (new)
+   - Files: `lib/sysd/publisher/github.ex` (new), `test/sysd/publisher/github_test.exs` (new)
    - Private helpers:
      - `gh_installed?/0` — `System.find_executable("gh")`.
      - `gh_authed?/0` — `System.cmd("gh", ["auth", "status"])` exit 0.
@@ -182,7 +182,7 @@ pluggable publisher system with two initial implementations: `github`
      attributes.
 
 6. **Write `mix sysd.release`.**
-   - Files: `lib/mix/tasks/sysd.release.ex` (new), `test/mix/tasks/relman_release_test.exs` (new)
+   - Files: `lib/mix/tasks/sysd.release.ex` (new), `test/mix/tasks/sysd_release_test.exs` (new)
    - Argv parsing with `OptionParser`: `--force`, `--replace`,
      `--no-publish` (all boolean).
    - Flow:
@@ -205,7 +205,7 @@ pluggable publisher system with two initial implementations: `github`
      Strategy).
 
 7. **Rework `mix sysd.deploy`.**
-   - Files: `lib/mix/tasks/sysd.deploy.ex`, `test/mix/tasks/relman_deploy_test.exs` (new or extended)
+   - Files: `lib/mix/tasks/sysd.deploy.ex`, `test/mix/tasks/sysd_deploy_test.exs` (new or extended)
    - Argv parsing: `--from-release` boolean.
    - Flow:
      1. Load config, app, version.
@@ -219,7 +219,7 @@ pluggable publisher system with two initial implementations: `github`
    - Update the `@moduledoc` to reflect the new behavior and flags.
 
 8. **Add `Remote.write_release_info/4`.**
-   - Files: `lib/relman/remote.ex`, `test/relman/...` (existing tests
+   - Files: `lib/sysd/remote.ex`, `test/sysd/...` (existing tests
      may not cover this module; skip if not)
    - Signature: `(conn, app_name, version, info_map) :: :ok`.
    - Builds the key=value body, uploads via `SSH.upload/3` to a tmp
@@ -227,7 +227,7 @@ pluggable publisher system with two initial implementations: `github`
    - Called by `sysd.deploy` after `Remote.deploy/4`.
 
 9. **Update `Mix.Tasks.Sysd` help text.**
-   - Files: `lib/mix/tasks/sysd.ex`, `test/mix/tasks/relman_test.exs`
+   - Files: `lib/mix/tasks/sysd.ex`, `test/mix/tasks/sysd_test.exs`
    - Add `mix sysd.release` to the task list and flag summary. Update
      the existing test assertions to cover the new task name.
 

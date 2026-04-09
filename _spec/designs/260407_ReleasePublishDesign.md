@@ -22,7 +22,7 @@ previously published artifact from GitHub Releases.
 **`mix sysd.release`** — build the tarball, optionally publish it.
 
 1. Verify `v<@version>` git tag exists locally (created by `mix
-   git_ops.release`). Fail if not — relman stays out of the versioning
+   git_ops.release`). Fail if not — sysd stays out of the versioning
    business.
 2. If the tarball for `@version` already exists locally, skip the build
    unless `--force` is passed.

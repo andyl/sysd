@@ -39,7 +39,7 @@ Implement the full set of Sysd Mix tasks (`sysd`, `sysd.init`, `sysd.sshcheck`, 
 
 5. **Mix tasks under `lib/mix/tasks/`** — Each task is a thin wrapper that loads config, iterates over servers, and delegates to `Sysd.Remote`. Tasks use `Mix.shell().info/1` for output.
 
-6. **EEX template for systemd** — Shipped as `priv/sysd/templates/app.service.eex` within the relman package itself. `sysd.init` copies a rendered version into the consumer's `priv/sysd/<appname>.service`.
+6. **EEX template for systemd** — Shipped as `priv/sysd/templates/app.service.eex` within the sysd package itself. `sysd.init` copies a rendered version into the consumer's `priv/sysd/<appname>.service`.
 
 7. **YAML dependency** — Add `yaml_elixir` to `deps` for YAML parsing/encoding. It's lightweight and well-maintained.
 
@@ -52,7 +52,7 @@ Implement the full set of Sysd Mix tasks (`sysd`, `sysd.init`, `sysd.sshcheck`, 
    - Add `{:yaml_elixir, "~> 2.11"}` to deps
 
 2. **Create `Sysd.Config` module**
-   - Files: `lib/relman/config.ex`
+   - Files: `lib/sysd/config.ex`
    - Struct: `%Config{servers: [], ssh: %{user: nil}}`
    - `load/0` — reads `config/sysd.yaml` from the consumer project root, parses YAML, returns `%Config{}`
    - `write/1` — writes a `%Config{}` back to YAML
@@ -60,14 +60,14 @@ Implement the full set of Sysd Mix tasks (`sysd`, `sysd.init`, `sysd.sshcheck`, 
    - Validate required fields, raise clear errors for missing/malformed config
 
 3. **Create `Sysd.SSH` module**
-   - Files: `lib/relman/ssh.ex`
+   - Files: `lib/sysd/ssh.ex`
    - `connect/2` — takes host and ssh config, returns `{:ok, conn}` via `SSHEx.connect/1`
    - `run!/3` — executes a command, raises on non-zero exit
    - `run/3` — executes a command, returns `{:ok, stdout, status}` or `{:error, reason}`
    - `upload/3` — opens an SFTP channel via `:ssh_sftp.start_channel/2` and writes a local file to a remote path
 
 4. **Create `Sysd.Remote` module**
-   - Files: `lib/relman/remote.ex`
+   - Files: `lib/sysd/remote.ex`
    - `setup_dirs/2` — creates `/opt/sysd/<appname>/{archives,releases}` on a connected server
    - `install_service/3` — writes the systemd service file to `/etc/systemd/services/<appname>.service` via sudo
    - `deploy/3` — uploads tar, extracts to releases dir, updates symlink, starts/restarts service
@@ -88,7 +88,7 @@ Implement the full set of Sysd Mix tasks (`sysd`, `sysd.init`, `sysd.sshcheck`, 
    - Add `version/0` — derives version from Mix project config
    - Add `release_tar_path/0` — returns path to built release tarball
 
-7. **Implement `mix relman` task (help)**
+7. **Implement `mix sysd` task (help)**
    - Files: `lib/mix/tasks/sysd.ex`
    - Prints usage overview listing all tasks and one-line descriptions
 
@@ -141,7 +141,7 @@ Implement the full set of Sysd Mix tasks (`sysd`, `sysd.init`, `sysd.sshcheck`, 
     - Call `Config.remove_server/2` to update YAML
 
 16. **Update tests**
-    - Files: `test/relman_test.exs`, `test/relman/config_test.exs`
+    - Files: `test/sysd_test.exs`, `test/sysd/config_test.exs`
     - Remove placeholder `hello` test
     - Add unit tests for `Sysd.Config` (load/write/remove_server with fixture YAML files)
     - Add unit tests for `Sysd` helper functions (app_name, version, release_tar_path)

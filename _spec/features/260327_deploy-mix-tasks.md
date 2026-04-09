@@ -23,9 +23,9 @@ connectivity, and systemd for service management.
 
 ## Mix Tasks
 
-### relman
+### sysd
 
-Print a help overview listing all available relman Mix tasks with a short
+Print a help overview listing all available sysd Mix tasks with a short
 description of each.
 
 ### sysd.init
