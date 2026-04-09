@@ -6,6 +6,11 @@ defmodule RelDep.SSH do
   use the system SSH agent for authentication.
   """
 
+  defmodule Error do
+    @moduledoc "Raised when an SSH command fails or the connection errors."
+    defexception [:message]
+  end
+
   @doc """
   Open an SSH connection to `host` using the given SSH config.
 
@@ -38,7 +43,7 @@ defmodule RelDep.SSH do
   Execute a command on the remote server, raising on failure.
 
   Returns the stdout string on success (exit status 0).
-  Raises a `Mix.Error` on non-zero exit or connection error.
+  Raises a `RelDep.SSH.Error` on non-zero exit or connection error.
   """
   def run!(conn, cmd) do
     case run(conn, cmd) do
@@ -46,10 +51,10 @@ defmodule RelDep.SSH do
         output
 
       {:ok, output, status} ->
-        Mix.raise("Command failed (exit #{status}): #{cmd}\n#{output}")
+        raise Error, "Command failed (exit #{status}): #{cmd}\n#{output}"
 
       {:error, reason} ->
-        Mix.raise("SSH error: #{inspect(reason)}")
+        raise Error, "SSH error: #{inspect(reason)}"
     end
   end
 
@@ -57,7 +62,9 @@ defmodule RelDep.SSH do
   Upload a local file to the remote server via SFTP.
 
   Opens an SFTP channel on the existing SSH connection, writes the
-  file contents, and closes the channel. Raises on failure.
+  file contents, and closes the channel.
+
+  Returns `{:ok, :uploaded}` or `{:error, reason}`.
   """
   def upload(conn, local_path, remote_path) do
     {:ok, channel} = :ssh_sftp.start_channel(conn)
@@ -65,13 +72,12 @@ defmodule RelDep.SSH do
 
     case :ssh_sftp.write_file(channel, to_charlist(remote_path), content) do
       :ok ->
-        IO.puts("Upload successful")
         :ssh_sftp.stop_channel(channel)
-        :ok
+        {:ok, :uploaded}
 
       {:error, reason} ->
         :ssh_sftp.stop_channel(channel)
-        Mix.raise("SFTP upload failed: #{inspect(reason)}")
+        {:error, "SFTP upload failed: #{inspect(reason)}"}
     end
   end
 end

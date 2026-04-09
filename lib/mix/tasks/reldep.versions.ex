@@ -13,27 +13,27 @@ defmodule Mix.Tasks.Reldep.Versions do
   """
   use Mix.Task
 
-  alias RelDep.{Config, SSH, Remote}
-
   @impl Mix.Task
   def run(_args) do
-    config = Config.load()
+    config = RelDep.Config.load()
     app_name = RelDep.app_name()
 
     Enum.each(config.servers, fn server ->
       Mix.shell().info("#{server}:")
 
-      {:ok, conn} = SSH.connect(server, config.ssh)
-      current = Remote.current_version(conn, app_name)
-      versions = Remote.list_versions(conn, app_name)
+      case RelDep.Deploy.versions(server, app: app_name, config: config) do
+        {:ok, %{versions: versions, current: current}} ->
+          if Enum.empty?(versions) do
+            Mix.shell().info("  No versions found")
+          else
+            Enum.each(versions, fn ver ->
+              marker = if ver == current, do: " (current)", else: ""
+              Mix.shell().info("  #{ver}#{marker}")
+            end)
+          end
 
-      if Enum.empty?(versions) do
-        Mix.shell().info("  No versions found")
-      else
-        Enum.each(versions, fn ver ->
-          marker = if ver == current, do: " (current)", else: ""
-          Mix.shell().info("  #{ver}#{marker}")
-        end)
+        {:error, reason} ->
+          Mix.shell().error("  Error: #{inspect(reason)}")
       end
     end)
   end

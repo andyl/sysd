@@ -20,13 +20,14 @@ defmodule RelDep.MixProject do
         },
         files: ~w(lib mix.exs README.md CHANGELOG.md LICENSE)
       ],
+      escript: [main_module: RelDep.CLI, name: "reldep"],
       deps: deps()
     ]
   end
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :ssh, :public_key]
     ]
   end
 
@@ -41,6 +42,7 @@ defmodule RelDep.MixProject do
 
   defp deps do
     [
+      {:optimus, "~> 0.5"},
       {:sshex, "~> 2.0"},
       {:yaml_elixir, "~> 2.11"},
       {:commit_hook, "~> 0.4"},

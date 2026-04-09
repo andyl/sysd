@@ -9,6 +9,7 @@ defmodule RelDep.ConfigTest do
 
     on_exit(fn ->
       File.rm_rf!(@fixture_dir)
+      System.delete_env("RELDEP_CONFIG")
     end)
 
     :ok
@@ -121,11 +122,90 @@ defmodule RelDep.ConfigTest do
     end
 
     test "raises on unknown publisher type" do
-      assert_raise Mix.Error, ~r/Unknown publisher type/, fn ->
+      assert_raise ArgumentError, ~r/Unknown publisher type/, fn ->
         RelDep.Config.parse(%{
           "release" => %{"publish" => [%{"type" => "s3"}]}
         })
       end
+    end
+  end
+
+  describe "load/1 - precedence chain" do
+    test "loads from explicit config_path" do
+      path = Path.join(@fixture_dir, "explicit.yml")
+
+      File.write!(path, """
+      servers:
+        - explicit-host
+      ssh:
+        user: admin
+      """)
+
+      assert {:ok, config} = RelDep.Config.load(config_path: path)
+      assert config.servers == ["explicit-host"]
+    end
+
+    test "returns error when explicit path doesn't exist" do
+      assert {:error, "config file not found:" <> _} =
+               RelDep.Config.load(config_path: "/nonexistent/config.yml")
+    end
+
+    test "loads from RELDEP_CONFIG env var" do
+      path = Path.join(@fixture_dir, "env.yml")
+
+      File.write!(path, """
+      servers:
+        - env-host
+      ssh:
+        user: envuser
+      """)
+
+      System.put_env("RELDEP_CONFIG", path)
+
+      assert {:ok, config} = RelDep.Config.load([])
+      assert config.servers == ["env-host"]
+    end
+
+    test "explicit path takes priority over RELDEP_CONFIG" do
+      env_path = Path.join(@fixture_dir, "env.yml")
+      explicit_path = Path.join(@fixture_dir, "explicit.yml")
+
+      File.write!(env_path, """
+      servers:
+        - env-host
+      ssh:
+        user: envuser
+      """)
+
+      File.write!(explicit_path, """
+      servers:
+        - explicit-host
+      ssh:
+        user: admin
+      """)
+
+      System.put_env("RELDEP_CONFIG", env_path)
+
+      assert {:ok, config} = RelDep.Config.load(config_path: explicit_path)
+      assert config.servers == ["explicit-host"]
+    end
+
+    test "parses multi-app config with :app option" do
+      path = Path.join(@fixture_dir, "multi.yml")
+
+      File.write!(path, """
+      apps:
+        myapp:
+          servers:
+            - app-host
+          ssh:
+            user: appuser
+      """)
+
+      assert {:ok, config} = RelDep.Config.load(config_path: path, app: "myapp")
+      assert config.servers == ["app-host"]
+      assert config.ssh[:user] == "appuser"
+      assert config.app == "myapp"
     end
   end
 

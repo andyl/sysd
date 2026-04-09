@@ -107,11 +107,63 @@ defmodule RelDep.Remote do
     current = current_version(conn, app_name)
 
     if current == version do
-      Mix.raise("Cannot remove the currently active version: #{version}")
+      raise RelDep.SSH.Error, "Cannot remove the currently active version: #{version}"
     end
 
     SSH.run!(conn, "sudo rm -rf #{RelDep.releases_path(app_name)}/#{version}")
     SSH.run!(conn, "sudo rm -f #{RelDep.archives_path(app_name)}/#{version}.tar.gz")
+  end
+
+  @doc "Check if the systemd service is active. Returns `{:ok, status_string}` or `{:error, reason}`."
+  def status(conn, app_name) do
+    case SSH.run(conn, "sudo systemctl is-active #{app_name}") do
+      {:ok, output, 0} -> {:ok, String.trim(output)}
+      {:ok, output, _} -> {:ok, String.trim(output)}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc "Start the systemd service."
+  def start(conn, app_name) do
+    SSH.run!(conn, "sudo systemctl start #{app_name}")
+    :ok
+  end
+
+  @doc "Stop the systemd service."
+  def stop(conn, app_name) do
+    SSH.run!(conn, "sudo systemctl stop #{app_name}")
+    :ok
+  end
+
+  @doc "Restart the systemd service."
+  def restart(conn, app_name) do
+    SSH.run!(conn, "sudo systemctl restart #{app_name}")
+    :ok
+  end
+
+  @doc "Fetch recent journal logs for the service. Returns `{:ok, log_output}`."
+  def logs(conn, app_name, opts \\ []) do
+    lines = Keyword.get(opts, :lines, 50)
+
+    case SSH.run(conn, "sudo journalctl -u #{app_name} -n #{lines} --no-pager") do
+      {:ok, output, 0} -> {:ok, output}
+      {:ok, output, _} -> {:ok, output}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc "Tail journal logs for the service (time-bounded). Returns `{:ok, log_output}`."
+  def tail(conn, app_name, opts \\ []) do
+    lines = Keyword.get(opts, :lines, 50)
+    seconds = Keyword.get(opts, :seconds, 10)
+
+    cmd =
+      "timeout #{seconds} sudo journalctl -u #{app_name} -f -n #{lines} --no-pager 2>/dev/null; true"
+
+    case SSH.run(conn, cmd) do
+      {:ok, output, _} -> {:ok, output}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   @doc "Stop the service, remove the service file, and delete all RelDep files from the server."

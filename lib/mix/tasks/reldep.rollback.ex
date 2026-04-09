@@ -17,22 +17,23 @@ defmodule Mix.Tasks.Reldep.Rollback do
   """
   use Mix.Task
 
-  alias RelDep.{Config, SSH, Remote}
-
   @impl Mix.Task
   def run(args) do
     case args do
       [version] ->
-        config = Config.load()
+        config = RelDep.Config.load()
         app_name = RelDep.app_name()
 
         Enum.each(config.servers, fn server ->
           Mix.shell().info("Rolling back #{server} to #{version}...")
 
-          {:ok, conn} = SSH.connect(server, config.ssh)
-          Remote.rollback(conn, app_name, version)
+          case RelDep.Deploy.rollback(server, version, app: app_name, config: config) do
+            {:ok, :rolled_back} ->
+              Mix.shell().info("  Rolled back successfully")
 
-          Mix.shell().info("  Rolled back successfully")
+            {:error, reason} ->
+              Mix.raise("Rollback failed on #{server}: #{reason}")
+          end
         end)
 
       _ ->

@@ -18,13 +18,11 @@ defmodule Mix.Tasks.Reldep.Cleanup do
   """
   use Mix.Task
 
-  alias RelDep.{Config, SSH, Remote}
-
   @impl Mix.Task
   def run(args) do
     case args do
       [server] ->
-        config = Config.load()
+        config = RelDep.Config.load()
         app_name = RelDep.app_name()
 
         unless server in config.servers do
@@ -33,12 +31,14 @@ defmodule Mix.Tasks.Reldep.Cleanup do
 
         Mix.shell().info("Cleaning up #{server}...")
 
-        {:ok, conn} = SSH.connect(server, config.ssh)
-        Remote.cleanup(conn, app_name)
+        case RelDep.Deploy.cleanup(server, app: app_name, config: config) do
+          {:ok, :cleaned_up} ->
+            RelDep.Config.remove_server(config, server)
+            Mix.shell().info("  Removed all RelDep files and config for #{server}")
 
-        Config.remove_server(config, server)
-
-        Mix.shell().info("  Removed all RelDep files and config for #{server}")
+          {:error, reason} ->
+            Mix.raise("Cleanup failed on #{server}: #{reason}")
+        end
 
       _ ->
         Mix.raise("Usage: mix reldep.cleanup SERVER")

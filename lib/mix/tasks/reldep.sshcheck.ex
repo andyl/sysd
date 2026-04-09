@@ -18,56 +18,34 @@ defmodule Mix.Tasks.Reldep.Sshcheck do
   """
   use Mix.Task
 
-  alias RelDep.SSH
-
   @impl Mix.Task
   def run(_args) do
     config = RelDep.Config.load()
+    app_name = RelDep.app_name()
 
     Enum.each(config.servers, fn server ->
       Mix.shell().info("Checking #{server}...")
 
-      case SSH.connect(server, config.ssh) do
-        {:ok, conn} ->
-          check_connection(conn, server)
-          check_sudo(conn, server)
-          check_directory(conn, server)
+      case RelDep.Deploy.check(server, app: app_name, config: config) do
+        {:ok, checks} ->
+          case checks.connection do
+            {:ok, user} -> Mix.shell().info("  Connected as #{user}")
+            {:error, msg} -> Mix.shell().error("  #{server}: #{msg}")
+          end
+
+          case checks.sudo do
+            :ok -> Mix.shell().info("  Sudo access: OK")
+            {:error, msg} -> Mix.shell().error("  #{server}: #{msg}")
+          end
+
+          case checks.directory do
+            :ok -> Mix.shell().info("  Directory access: OK")
+            {:error, msg} -> Mix.shell().error("  #{server}: #{msg}")
+          end
 
         {:error, reason} ->
           Mix.shell().error("  SSH connection failed: #{inspect(reason)}")
       end
     end)
-  end
-
-  defp check_connection(conn, server) do
-    case SSH.run(conn, "whoami") do
-      {:ok, user, 0} ->
-        Mix.shell().info("  Connected as #{String.trim(user)}")
-
-      _ ->
-        Mix.shell().error("  #{server}: connection test failed")
-    end
-  end
-
-  defp check_sudo(conn, server) do
-    case SSH.run(conn, "sudo -n true") do
-      {:ok, _, 0} ->
-        Mix.shell().info("  Sudo access: OK")
-
-      _ ->
-        Mix.shell().error("  #{server}: passwordless sudo not available")
-    end
-  end
-
-  defp check_directory(conn, server) do
-    app_path = RelDep.app_path(RelDep.app_name())
-
-    case SSH.run(conn, "sudo mkdir -p #{app_path} && sudo rmdir #{app_path} 2>/dev/null; echo ok") do
-      {:ok, _, 0} ->
-        Mix.shell().info("  Directory access: OK")
-
-      _ ->
-        Mix.shell().error("  #{server}: cannot create #{app_path}")
-    end
   end
 end

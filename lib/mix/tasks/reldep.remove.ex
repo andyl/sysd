@@ -17,23 +17,23 @@ defmodule Mix.Tasks.Reldep.Remove do
   """
   use Mix.Task
 
-  alias RelDep.{Config, SSH, Remote}
-
   @impl Mix.Task
   def run(args) do
     case args do
       [version] ->
-        config = Config.load()
-
+        config = RelDep.Config.load()
         app_name = RelDep.app_name()
 
         Enum.each(config.servers, fn server ->
           Mix.shell().info("Removing #{version} from #{server}...")
 
-          {:ok, conn} = SSH.connect(server, config.ssh)
-          Remote.remove_version(conn, app_name, version)
+          case RelDep.Deploy.remove(server, version, app: app_name, config: config) do
+            {:ok, :removed} ->
+              Mix.shell().info("  Removed successfully")
 
-          Mix.shell().info("  Removed successfully")
+            {:error, reason} ->
+              Mix.raise("Remove failed on #{server}: #{reason}")
+          end
         end)
 
       _ ->
