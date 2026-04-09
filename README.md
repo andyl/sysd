@@ -1,9 +1,9 @@
-# RelDep
+# Release Deployer
 
-RelDep Tasks are for deploying Elixir Releases to bare metal servers over SSH.
-RelDep provides a minimalist deployment workflow targeting LAN/internal
-environments, using YAML configuration, SSHex for SSH connectivity, and systemd
-for service management.
+Deploy Elixir Releases to bare metal servers over SSH as systemd services.
+A minimalist deployment workflow targeting LAN/internal environments, using
+YAML configuration, SSHex for SSH connectivity, and systemd for service
+management.
 
 Goals
 
@@ -22,39 +22,39 @@ Non-Goals
 ## Installation
 
 The package can be installed
-by adding `reldep` to your list of dependencies in `mix.exs`:
+by adding `release_deployer` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:reldep, "~> 0.3.0"}
+    {:release_deployer, "~> 0.3.0"}
   ]
 end
 ```
 
 ## Mix Tasks
 
-### reldep.init
+### sysd.init
 
 Generate starter configuration files in the consumer project:
-- `config/reldep.yaml` with default server and SSH settings
-- `priv/reldep/<appname>.service` systemd service file as an EEX template
+- `config/sysd.yaml` with default server and SSH settings
+- `priv/sysd/<appname>.service` systemd service file as an EEX template
 
-### reldep.sshcheck
+### sysd.sshcheck
 
 Validate SSH connectivity and permissions on all configured servers:
 - Test SSH connection to each server
 - Verify the deploy user has sudo access
-- Verify the deploy user can create `/opt/reldep/<appname>`
+- Verify the deploy user can create `/opt/sysd/<appname>`
 
-### reldep.setup
+### sysd.setup
 
 Perform first-time server setup and initial deploy for each server:
 - Create the systemd service file at `/etc/systemd/services/<appname>.service`
-- Create the `/opt/reldep/<appname>` directory structure
-- Run the deploy workflow (see reldep.deploy)
+- Create the `/opt/sysd/<appname>` directory structure
+- Run the deploy workflow (see sysd.deploy)
 
-### reldep.release
+### sysd.release
 
 Build a production release tarball and optionally publish it to the
 configured publishers:
@@ -68,49 +68,49 @@ configured publishers:
 
 Flags: `--force`, `--replace`, `--no-publish`.
 
-### reldep.deploy
+### sysd.deploy
 
 Push an existing release tarball to every configured server:
-- If no local tarball exists for `@version`, invoke `mix reldep.release`
+- If no local tarball exists for `@version`, invoke `mix sysd.release`
   to build one (the default path)
 - With `--from-release`, fetch the tarball for `@version` from the first
   fetch-capable publisher — useful for deploying from a fresh checkout
 - For each server:
-  - Copy the tarball to `/opt/reldep/<appname>/archives/<version>.tar.gz`
-  - Extract the release to `/opt/reldep/<appname>/releases/<version>`
-  - Update the symlink `/opt/reldep/<appname>/current` to point to the new release
+  - Copy the tarball to `/opt/sysd/<appname>/archives/<version>.tar.gz`
+  - Extract the release to `/opt/sysd/<appname>/releases/<version>`
+  - Update the symlink `/opt/sysd/<appname>/current` to point to the new release
   - Start or restart the systemd service
-  - Write `/opt/reldep/<appname>/releases/<version>/RELEASE_INFO` with
+  - Write `/opt/sysd/<appname>/releases/<version>/RELEASE_INFO` with
     the git sha, build host, timestamp, and publisher URL (if used)
 
-### reldep.versions
+### sysd.versions
 
-List deployed release versions on each configured server by reading `/opt/reldep/<appname>/releases`.
+List deployed release versions on each configured server by reading `/opt/sysd/<appname>/releases`.
 
-### reldep.rollback
+### sysd.rollback
 
 Roll back to a previous release version on all servers:
 - Accept a version argument
-- Update the symlink `/opt/reldep/<appname>/current` to point to the specified version
+- Update the symlink `/opt/sysd/<appname>/current` to point to the specified version
 - Restart the systemd service
 
-### reldep.remove
+### sysd.remove
 
 Remove an old release version from all servers:
 - Accept a version argument
 - Refuse to remove the currently active version
-- Remove `/opt/reldep/<appname>/releases/<version>` and `/opt/reldep/<appname>/archives/<version>.tar`
+- Remove `/opt/sysd/<appname>/releases/<version>` and `/opt/sysd/<appname>/archives/<version>.tar`
 
-### reldep.cleanup
+### sysd.cleanup
 
-Fully remove RelDep from a specific server:
-- Remove the server entry from `config/reldep.yaml`
+Fully remove the deployment from a specific server:
+- Remove the server entry from `config/sysd.yaml`
 - Remove the systemd service file
-- Remove the `/opt/reldep/<appname>` directory
+- Remove the `/opt/sysd/<appname>` directory
 
 ## Configuration
 
-YAML configuration at `config/reldep.yaml`:
+YAML configuration at `config/sysd.yaml`:
 
 ```yaml
 servers:
@@ -119,8 +119,8 @@ servers:
 ssh:
   user: <name>
 
-# Optional. Publishers run in order during `mix reldep.release` and are
-# walked in order for `mix reldep.deploy --from-release`. Omit the
+# Optional. Publishers run in order during `mix sysd.release` and are
+# walked in order for `mix sysd.deploy --from-release`. Omit the
 # `release.publish` block entirely for a local-only build.
 release:
   publish:
@@ -146,25 +146,25 @@ Typical flow:
 
 ```
 mix git_ops.release                    # bump version, create v<x.y.z>
-MIX_ENV=prod mix reldep.release        # build and publish
-MIX_ENV=prod mix reldep.deploy         # push to servers
+MIX_ENV=prod mix sysd.release          # build and publish
+MIX_ENV=prod mix sysd.deploy           # push to servers
 ```
 
 Deploying from a fresh checkout with no local build:
 
 ```
 git checkout v0.3.0
-MIX_ENV=prod mix reldep.deploy --from-release
+MIX_ENV=prod mix sysd.deploy --from-release
 ```
 
 ## Remote Server Layout
 
 ```
-/opt/reldep/<appname>/
+/opt/sysd/<appname>/
   archives/<version>.tar
   releases/<version>/
   current -> releases/<version>
 ```
 
-Each application gets its own subdirectory under `/opt/reldep/`, allowing
+Each application gets its own subdirectory under `/opt/sysd/`, allowing
 multiple apps to be deployed on the same server.

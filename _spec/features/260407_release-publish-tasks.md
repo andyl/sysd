@@ -2,9 +2,9 @@
 
 ## Summary
 
-Split the existing `mix reldep.deploy` task into two distinct Mix tasks —
-`mix reldep.release` for producing a release tarball and optionally publishing
-it to an external artifact store, and `mix reldep.deploy` for pushing a
+Split the existing `mix sysd.deploy` task into two distinct Mix tasks —
+`mix sysd.release` for producing a release tarball and optionally publishing
+it to an external artifact store, and `mix sysd.deploy` for pushing a
 tarball to configured servers. Introduce a pluggable publisher system, with
 two publisher types shipping in the first implementation: `github` (via the
 `gh` CLI) and `file` (copy to a local or mounted directory).
@@ -15,7 +15,7 @@ two publisher types shipping in the first implementation: `github` (via the
   CI/CD seam.
 - Allow deploying from a machine that did not build the artifact, by
   fetching a previously published tarball.
-- Provide a pluggable publisher shape in `config/reldep.yaml` that supports
+- Provide a pluggable publisher shape in `config/sysd.yaml` that supports
   multiple publishers simultaneously and leaves room for future types.
 - Ship two publisher types: `github` and `file`.
 - Record deploy provenance on the remote server for incident debugging.
@@ -34,7 +34,7 @@ two publisher types shipping in the first implementation: `github` (via the
 
 ## Mix Tasks
 
-### reldep.release
+### sysd.release
 
 Build the release tarball and optionally publish it to each configured
 publisher.
@@ -57,15 +57,15 @@ Flags:
 - `--replace` — delete and recreate an existing published artifact.
 - `--no-publish` — build only; skip all configured publishers.
 
-### reldep.deploy
+### sysd.deploy
 
 Push an existing release tarball to each configured server. This replaces
-the current `reldep.deploy` behavior of unconditionally building a release
+the current `sysd.deploy` behavior of unconditionally building a release
 before deploying.
 
 Behavior:
 
-- If no local tarball exists for `@version`, invoke `mix reldep.release` to
+- If no local tarball exists for `@version`, invoke `mix sysd.release` to
   build one. This is the default path.
 - If `--from-release` is passed, instead fetch the tarball for `@version`
   from the first configured publisher that supports fetching. This enables
@@ -74,7 +74,7 @@ Behavior:
   the tarball, extract it, flip the `current` symlink, restart the systemd
   service.
 - After a successful deploy on each server, write a `RELEASE_INFO` file
-  into `/opt/reldep/<app>/releases/<version>/` containing:
+  into `/opt/sysd/<app>/releases/<version>/` containing:
   - git sha
   - build host and timestamp
   - publisher URL (if the tarball was fetched from a publisher)
@@ -87,7 +87,7 @@ Flags:
 ## Publisher System
 
 Publishing is modeled as an ordered list of publishers in
-`config/reldep.yaml`. Omitting the `release.publish` key entirely results in
+`config/sysd.yaml`. Omitting the `release.publish` key entirely results in
 a local build with no upload, keeping the simple case simple.
 
 Each publisher type implements the same internal contract covering three
@@ -97,7 +97,7 @@ operations:
   work runs.
 - **Publish** — upload or copy the tarball to the destination.
 - **Fetch** — retrieve a previously published tarball for a given version
-  into the local build location (used by `reldep.deploy --from-release`).
+  into the local build location (used by `sysd.deploy --from-release`).
 
 This contract keeps the task code free of per-publisher branching and makes
 adding a future publisher type (S3, SCP, rsync, ...) a matter of
@@ -172,7 +172,7 @@ Fetch behavior:
 
 ## Configuration
 
-The `release.publish` key is added to `config/reldep.yaml`. A config using
+The `release.publish` key is added to `config/sysd.yaml`. A config using
 both shipping publisher types:
 
 ```yaml
@@ -195,13 +195,13 @@ Omitting `release.publish` results in a local build only, with no upload.
 
 ## Idempotency
 
-- Re-running `reldep.release` for the same `@version`:
+- Re-running `sysd.release` for the same `@version`:
   - The build step is a no-op if a tarball already exists, unless `--force`
     is passed.
   - The publish step errors if an artifact for `v<@version>` already exists
     at any configured publisher, unless `--replace` is passed (which
     deletes or overwrites the existing artifact).
-- Re-running `reldep.deploy` for the same `@version` remains idempotent at
+- Re-running `sysd.deploy` for the same `@version` remains idempotent at
   the server level. The existing per-server deploy behavior is unchanged.
 
 ## Typical Flow
@@ -210,13 +210,13 @@ Standard release cycle:
 
 ```
 mix git_ops.release     # bump version, create v<x.y.z> tag
-mix reldep.release      # build tarball, publish to configured targets
-mix reldep.deploy       # push to servers (uses local tarball)
+mix sysd.release      # build tarball, publish to configured targets
+mix sysd.deploy       # push to servers (uses local tarball)
 ```
 
 Deploying from a fresh checkout with no local build artifacts:
 
 ```
 git checkout v0.3.0
-mix reldep.deploy --from-release
+mix sysd.deploy --from-release
 ```

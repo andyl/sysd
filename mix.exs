@@ -1,26 +1,26 @@
-defmodule RelDep.MixProject do
+defmodule Sysd.MixProject do
   use Mix.Project
 
   @version "0.3.0"
 
   def project do
     [
-      app: :reldep,
+      app: :release_deployer,
       version: @version,
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       licenses: ["MIT"],
       docs: docs(),
       package: [
-        name: "reldep",
+        name: "release_deployer",
         licenses: ["MIT"],
         links: %{
-          "GitHub" => "https://github.com/andyl/commit_hook",
-          "Docs" => "https://hexdocs.pm/commit_hook"
+          "GitHub" => "https://github.com/andyl/release_deployer",
+          "Docs" => "https://hexdocs.pm/release_deployer"
         },
         files: ~w(lib mix.exs README.md CHANGELOG.md LICENSE)
       ],
-      escript: [main_module: RelDep.CLI, name: "reldep"],
+      escript: [main_module: Sysd.CLI, name: "sysd"],
       deps: deps()
     ]
   end
