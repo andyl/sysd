@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## v0.3.0 (2026-04-09)
+
+
+
+
+### Features:
+
+* add publish option by andyl
+
+### Bug Fixes:
+
+* add escript by andyl
+
 ## v0.2.1 (2026-04-07)
 
 
