@@ -38,7 +38,7 @@ Ship a standalone `sysd` escript binary and refactor all deploy logic into a sha
 
 4. **Optimus for CLI parsing.** Optimus provides subcommand support, help text generation, and argument/flag validation out of the box. Each subcommand maps 1:1 to a `Sysd.Deploy` function.
 
-5. **Config precedence chain.** `Sysd.Config.load/1` accepts an optional explicit path (from `--config` flag). When nil, it checks `RELDEP_CONFIG` env var, then walks up from cwd looking for `sysd.yml`, then falls back to `~/.config/sysd/config.yml`. The existing `Sysd.Config.load/0` (hardcoded `config/sysd.yaml`) is preserved for backward compat in Mix tasks but delegates to the new logic.
+5. **Config precedence chain.** `Sysd.Config.load/1` accepts an optional explicit path (from `--config` flag). When nil, it checks `SYSD_CONFIG_FILE` env var, then walks up from cwd looking for `sysd.yml`, then falls back to `~/.config/sysd/config.yml`. The existing `Sysd.Config.load/0` (hardcoded `config/sysd.yaml`) is preserved for backward compat in Mix tasks but delegates to the new logic.
 
 6. **Tarball ref parsing.** `Sysd.TarballRef.parse/1` returns a tagged struct: `%TarballRef{scheme: :file | :github | :s3, ...}`. A `resolve/2` function materializes the ref to a local file path (downloading if needed). `s3://` returns `{:error, :not_implemented}`.
 
@@ -68,7 +68,7 @@ Ship a standalone `sysd` escript binary and refactor all deploy logic into a sha
 4. **Refactor config loading with precedence chain**
    - Files: `lib/sysd/config.ex`
    - Add `load/1` that accepts `opts` keyword list with optional `:config_path`
-   - Implement precedence: explicit path → `RELDEP_CONFIG` env → walk-up discovery of `sysd.yml` → XDG `~/.config/sysd/config.yml`
+   - Implement precedence: explicit path → `SYSD_CONFIG_FILE` env → walk-up discovery of `sysd.yml` → XDG `~/.config/sysd/config.yml`
    - Keep existing `load/0` working by delegating to `load/1` with empty opts
    - Parse the new config shape (multi-app `apps:` key) alongside the existing single-app shape for backward compat
 

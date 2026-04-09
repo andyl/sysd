@@ -114,7 +114,7 @@ Parsing is handled by a dedicated `Sysd.TarballRef` module.
 A four-level precedence chain (highest wins):
 
 1. CLI flags (`--config /path/to/config.yml`).
-2. Environment variable (`RELDEP_CONFIG=/path/to/config.yml`).
+2. Environment variable (`SYSD_CONFIG_FILE=/path/to/config.yml`).
 3. Project-local `sysd.yml` discovered by walking up from cwd.
 4. User-level `~/.config/sysd/config.yml` (XDG).
 

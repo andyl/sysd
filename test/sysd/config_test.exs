@@ -9,7 +9,7 @@ defmodule Sysd.ConfigTest do
 
     on_exit(fn ->
       File.rm_rf!(@fixture_dir)
-      System.delete_env("RELDEP_CONFIG")
+      System.delete_env("SYSD_CONFIG_FILE")
     end)
 
     :ok
@@ -83,7 +83,7 @@ defmodule Sysd.ConfigTest do
                Sysd.Config.load(config_path: "/nonexistent/config.yml")
     end
 
-    test "loads from RELDEP_CONFIG env var" do
+    test "loads from SYSD_CONFIG_FILE env var" do
       path = Path.join(@fixture_dir, "env.yml")
 
       File.write!(path, """
@@ -93,13 +93,13 @@ defmodule Sysd.ConfigTest do
         user: envuser
       """)
 
-      System.put_env("RELDEP_CONFIG", path)
+      System.put_env("SYSD_CONFIG_FILE", path)
 
       assert {:ok, config} = Sysd.Config.load([])
       assert config.servers == ["env-host"]
     end
 
-    test "explicit path takes priority over RELDEP_CONFIG" do
+    test "explicit path takes priority over SYSD_CONFIG_FILE" do
       env_path = Path.join(@fixture_dir, "env.yml")
       explicit_path = Path.join(@fixture_dir, "explicit.yml")
 
@@ -117,7 +117,7 @@ defmodule Sysd.ConfigTest do
         user: admin
       """)
 
-      System.put_env("RELDEP_CONFIG", env_path)
+      System.put_env("SYSD_CONFIG_FILE", env_path)
 
       assert {:ok, config} = Sysd.Config.load(config_path: explicit_path)
       assert config.servers == ["explicit-host"]

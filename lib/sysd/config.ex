@@ -5,7 +5,7 @@ defmodule Sysd.Config do
   ## Config Precedence (for `load/1`)
 
   1. Explicit `:config_path` option (from `--config` CLI flag)
-  2. `RELDEP_CONFIG` environment variable
+  2. `SYSD_CONFIG_FILE` environment variable
   3. Walk up from cwd looking for `sysd.yml`
   4. XDG fallback: `~/.config/sysd/config.yml`
 
@@ -97,11 +97,11 @@ defmodule Sysd.Config do
 
   defp resolve_config_path(nil) do
     cond do
-      env = System.get_env("RELDEP_CONFIG") ->
+      env = System.get_env("SYSD_CONFIG_FILE") ->
         if File.exists?(env) do
           {:ok, env}
         else
-          {:error, "RELDEP_CONFIG points to missing file: #{env}"}
+          {:error, "SYSD_CONFIG_FILE points to missing file: #{env}"}
         end
 
       path = walk_up_find(@walk_up_filename) ->
