@@ -8,12 +8,12 @@ This document captures the direction.
 
 ## Motivation
 
-Relman today ships as a Mix dependency. Every `mix relman.*` command
-requires running from inside a project checkout that lists `:relman`
+RelDep today ships as a Mix dependency. Every `mix reldep.*` command
+requires running from inside a project checkout that lists `:reldep`
 in `mix.exs`. That made sense when the only way to get a tarball was
 to build it locally, but it no longer does:
 
-- `mix relman.deploy --from-release` can fetch a published tarball
+- `mix reldep.deploy --from-release` can fetch a published tarball
   from GitHub without ever touching the source.
 - The inputs to a deploy are tiny: a tarball reference, a host, a
   service name, some ssh details. None of that needs `mix.exs`.
@@ -25,11 +25,11 @@ artificial coupling. The `sup` script demonstrates the opposite
 extreme: a single self-contained Elixir script with zero project
 awareness, used successfully in production.
 
-Relman should sit between these two points.
+RelDep should sit between these two points.
 
 ## The Natural Seam
 
-Relman's operations fall into two groups with different requirements:
+RelDep's operations fall into two groups with different requirements:
 
 **Build / publish side — belongs in the project**
 
@@ -53,19 +53,19 @@ lifts out.
 
 Two deliverables, one repo:
 
-### 1. `mix relman.*` — project-side Mix tasks
+### 1. `mix reldep.*` — project-side Mix tasks
 
 Unchanged in purpose from today. Stays a Mix dep in the consumer
 project. Responsible for:
 
-- `mix relman.release` — build + optionally publish tarball
-- `mix relman.publish` — publish an already-built tarball (if we
+- `mix reldep.release` — build + optionally publish tarball
+- `mix reldep.publish` — publish an already-built tarball (if we
   decide to expose this separately)
 
 These tasks inherently live inside a project. Making them global
 buys nothing.
 
-### 2. `relman` — global escript
+### 2. `reldep` — global escript
 
 A standalone executable installed once per machine, usable from
 anywhere. Responsible for everything that operates on a *deployed*
@@ -94,7 +94,7 @@ to the matching publisher implementation.
 
 ### Naming note: relman vs. sup
 
-The global `relman` CLI will overlap with `sup`. The intended
+The global `reldep` CLI will overlap with `sup`. The intended
 distinction:
 
 - **sup** — general "run this command as a systemd service" tool.
@@ -112,7 +112,7 @@ Three realistic packaging options exist for the global side:
 
 | Form                 | Install               | Invocation              | Downsides                                                                        |
 |----------------------|-----------------------|-------------------------|----------------------------------------------------------------------------------|
-| Mix archive          | `mix archive.install` | `mix relman.deploy ...` | Still feels project-scoped; mix ceremony on every call                           |
+| Mix archive          | `mix archive.install` | `mix reldep.deploy ...` | Still feels project-scoped; mix ceremony on every call                           |
 | `Mix.install` script | copy file to PATH     | `relman ...`            | Slow cold start; needs `elixir` in PATH; harder to distribute as a release asset |
 | **Escript**          | download binary       | `relman ...`            | Needs Erlang runtime (acceptable — target audience has it)                       |
 
@@ -121,7 +121,7 @@ Escript wins:
 - Ships as a single file — publishable as a GitHub release asset
   from relman's own build pipeline. (First customer of the new
   publish feature. Very satisfying.)
-- Proper `relman` command, not `mix relman.foo`. Feels like a real
+- Proper `reldep` command, not `mix reldep.foo`. Feels like a real
   CLI, not a project task masquerading as one.
 - Fast startup. No Mix boot.
 - Distributable: `curl` the escript off a GitHub release, `chmod +x`,
@@ -153,27 +153,27 @@ file, like `sup`. Config is a convenience layer on top.
 Three-level precedence, highest wins:
 
 1. **CLI flags** — always override
-2. **Project-local `relman.yaml`** — discovered by walking up from
+2. **Project-local `reldep.yaml`** — discovered by walking up from
    cwd, same as how git finds `.git`. This is the primary source
    when deploying a known project from its checkout.
-3. **User-level `~/.config/relman/config.yaml`** — optional defaults
+3. **User-level `~/.config/reldep/config.yaml`** — optional defaults
    (ssh user, default github org, default publisher, etc.)
 
 If none of these exist and required values aren't passed as flags,
 fail with a clear message naming the missing input.
 
-The project-local file is the same `relman.yaml` consumed by the
+The project-local file is the same `reldep.yaml` consumed by the
 Mix-task side. One config, two consumers — the global CLI reads
 the subset relevant to deploy/manage operations (`servers`, `ssh`,
 `app`, `release.publish` for fetch-resolution), the Mix tasks read
 the build/publish subset. They don't conflict.
 
-A project-local `relman.yaml` should let you skip most flags:
+A project-local `reldep.yaml` should let you skip most flags:
 
 ```
 cd ~/src/myapp
 relman deploy host1.lan gh://andyl/myapp@v0.2.1
-# picks up app name, ssh user, servers list from ./relman.yaml
+# picks up app name, ssh user, servers list from ./reldep.yaml
 ```
 
 ## Systemd Service Template
@@ -199,17 +199,17 @@ thing to install, locate, and keep in sync with the code that renders
 it. The template lives in the escript. Full stop.
 
 For the rare case that needs full override, allow
-`service_template: path/to/file.eex` in `relman.yaml` — but don't
+`service_template: path/to/file.eex` in `reldep.yaml` — but don't
 build that escape hatch until someone actually asks for it.
 
 ## Bootstrapping the Escript
 
 The relman repo itself builds and publishes the escript:
 
-1. `mix relman.release` builds the escript (via `mix escript.build`
+1. `mix reldep.release` builds the escript (via `mix escript.build`
    as part of the release step, or as a dedicated
-   `mix relman.escript` task).
-2. The resulting `relman` binary is attached to the GitHub release
+   `mix reldep.escript` task).
+2. The resulting `reldep` binary is attached to the GitHub release
    for the version tag.
 3. Users install via:
 
@@ -230,7 +230,7 @@ of the publish feature. Good dogfooding.
 The split doesn't need to happen in one step:
 
 1. **Land the publish design first** (already designed).
-2. **Add `mix escript.build` target** to relman. At this point the
+2. **Add `mix escript.build` target** to reldep. At this point the
    escript exists but only duplicates a subset of the Mix tasks.
 3. **Move deploy/manage logic into shared modules** that both the
    Mix tasks and the escript call. No behavior change.
@@ -251,9 +251,9 @@ until the Mix-task side is deliberately trimmed.
 - **`relman self-update`**: worth building, or leave it to users?
   Lean toward "build it, it's ~30 lines."
 - **Config schema versioning**: if both the Mix-task side and the
-  escript read `relman.yaml`, we should define the schema once and
+  escript read `reldep.yaml`, we should define the schema once and
   share the loader module between them.
-- **Host identity**: does `relman` need any concept of "host
+- **Host identity**: does `reldep` need any concept of "host
   groups" / "environments" (staging vs prod), or is a flat
   `servers:` list in config enough? Current design says flat list;
   reconsider if it gets painful.
@@ -265,8 +265,8 @@ until the Mix-task side is deliberately trimmed.
 
 ## Out of Scope
 
-- Replacing `sup`. Relman and sup stay separate tools.
-- Non-Elixir release support. Relman is Elixir-release-specific by
+- Replacing `sup`. RelDep and sup stay separate tools.
+- Non-Elixir release support. RelDep is Elixir-release-specific by
   design; if you need "run an arbitrary command as a service," use
   sup.
 - GUI / TUI. CLI only.
@@ -294,7 +294,7 @@ logic. All three consumers then share the same code path.
 
 ```
           ┌─────────────────────────────────────┐
-          │      Relman.Deploy (library)        │
+          │      RelDep.Deploy (library)        │
           │  deploy/3, versions/2, rollback/3,  │
           │  status/2, logs/2, remove/2, ...    │
           └──────────────────┬──────────────────┘
@@ -309,7 +309,7 @@ logic. All three consumers then share the same code path.
 ```
 
 The escript's `main/1` does argv parsing → validation → calls into
-`Relman.Deploy.*` → formats output. Nothing load-bearing lives in
+`RelDep.Deploy.*` → formats output. Nothing load-bearing lives in
 the escript itself. Same for the Mix tasks: they're translation
 layers from `mix` invocation to library calls.
 
@@ -320,20 +320,20 @@ illustrative; the point is that every CLI subcommand maps to a
 library function that a `Mix.install` script could call directly:
 
 ```elixir
-Relman.Deploy.check(host, opts)
-Relman.Deploy.deploy(host, tarball_ref, opts)
-Relman.Deploy.versions(host, app, opts)
-Relman.Deploy.rollback(host, app, version, opts)
-Relman.Deploy.status(host, app, opts)
-Relman.Deploy.start(host, app, opts)
-Relman.Deploy.stop(host, app, opts)
-Relman.Deploy.restart(host, app, opts)
-Relman.Deploy.logs(host, app, opts)   # stream
-Relman.Deploy.remove(host, app, opts)
-Relman.Deploy.cleanup(host, app, opts)
+RelDep.Deploy.check(host, opts)
+RelDep.Deploy.deploy(host, tarball_ref, opts)
+RelDep.Deploy.versions(host, app, opts)
+RelDep.Deploy.rollback(host, app, version, opts)
+RelDep.Deploy.status(host, app, opts)
+RelDep.Deploy.start(host, app, opts)
+RelDep.Deploy.stop(host, app, opts)
+RelDep.Deploy.restart(host, app, opts)
+RelDep.Deploy.logs(host, app, opts)   # stream
+RelDep.Deploy.remove(host, app, opts)
+RelDep.Deploy.cleanup(host, app, opts)
 
-Relman.TarballRef.parse("gh://owner/repo@v0.2.1")
-Relman.Config.load(path_or_discover)
+RelDep.TarballRef.parse("gh://owner/repo@v0.2.1")
+RelDep.Config.load(path_or_discover)
 ```
 
 `opts` is a plain keyword list. Returns are `{:ok, result}` /
@@ -341,7 +341,7 @@ Relman.Config.load(path_or_discover)
 The escript translates errors into exit codes; a `Mix.install`
 script can match on them and decide what to do.
 
-**Design rule**: no `IO.puts` or `System.halt` in `Relman.Deploy.*`.
+**Design rule**: no `IO.puts` or `System.halt` in `RelDep.Deploy.*`.
 User-facing output and process lifecycle belong to the caller (the
 escript, the Mix task, or the user's script). The library emits
 structured results, optionally with a logger/telemetry hook for
@@ -359,13 +359,13 @@ What a user's custom deploy script should look like:
 #!/usr/bin/env elixir
 
 Mix.install([
-  {:relman, "~> 0.3"}
+  {:reldep, "~> 0.3"}
 ])
 
-alias Relman.Deploy
+alias RelDep.Deploy
 
 hosts = ["host1.lan", "host2.lan", "host3.lan"]
-ref = Relman.TarballRef.parse!("gh://andyl/myapp@v0.3.0")
+ref = RelDep.TarballRef.parse!("gh://andyl/myapp@v0.3.0")
 
 # Canary first
 [canary | rest] = hosts
@@ -392,14 +392,14 @@ requires the library API. Meanwhile, the exact same functions power
 The migration steps from the main design update slightly:
 
 1. Publish design lands (unchanged).
-2. **Refactor deploy/manage internals into `Relman.Deploy.*`
+2. **Refactor deploy/manage internals into `RelDep.Deploy.*`
    with the no-`IO`/no-`halt` rule.** Existing Mix tasks become
    thin wrappers. This is the load-bearing step — do it first,
    before touching packaging.
-3. Add `mix escript.build` that produces a `relman` escript which
-   is *also* a thin wrapper over `Relman.Deploy.*`.
+3. Add `mix escript.build` that produces a `reldep` escript which
+   is *also* a thin wrapper over `RelDep.Deploy.*`.
 4. Publish the escript as a GH release asset.
-5. Document `Mix.install({:relman, ...})` as a supported usage
+5. Document `Mix.install({:reldep, ...})` as a supported usage
    mode for custom deploy scripts, with an example script in
    the repo (`examples/custom_deploy.exs` or similar).
 6. Deprecate the deploy/manage Mix tasks in favor of (a) the
@@ -417,10 +417,10 @@ escript. The two delivery modes are complementary:
 | Use case                              | Delivery                  |
 |---------------------------------------|---------------------------|
 | Ad-hoc ops from a shell               | Escript: `relman ...`     |
-| Custom programmatic deploy workflow   | `Mix.install({:relman})`  |
+| Custom programmatic deploy workflow   | `Mix.install({:reldep})`  |
 | Mix-task-style project integration    | Mix dep (build/publish)   |
 
-The common substrate under all three is `Relman.Deploy.*`. Get that
+The common substrate under all three is `RelDep.Deploy.*`. Get that
 layer right and the packaging choices stop mattering much — you can
 add, change, or drop any of the three wrappers without rewriting
 the engine.

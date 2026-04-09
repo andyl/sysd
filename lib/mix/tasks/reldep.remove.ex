@@ -1,23 +1,23 @@
-defmodule Mix.Tasks.Relman.Remove do
+defmodule Mix.Tasks.Reldep.Remove do
   @shortdoc "Remove old releases"
 
   @moduledoc """
   Remove an old release version from all configured servers.
 
-      $ mix relman.remove VERSION
+      $ mix reldep.remove VERSION
 
-  For each server in `config/relman.yaml`, this task will delete:
+  For each server in `config/reldep.yaml`, this task will delete:
 
-    * `/opt/relman/<appname>/releases/<VERSION>/`
-    * `/opt/relman/<appname>/archives/<VERSION>.tar.gz`
+    * `/opt/reldep/<appname>/releases/<VERSION>/`
+    * `/opt/reldep/<appname>/archives/<VERSION>.tar.gz`
 
   The currently active version cannot be removed. Use
-  `mix relman.versions` to check which version is current, and
-  `mix relman.rollback` to switch away from it first if needed.
+  `mix reldep.versions` to check which version is current, and
+  `mix reldep.rollback` to switch away from it first if needed.
   """
   use Mix.Task
 
-  alias Relman.{Config, SSH, Remote}
+  alias RelDep.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(args) do
@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Relman.Remove do
       [version] ->
         config = Config.load()
 
-        app_name = Relman.app_name()
+        app_name = RelDep.app_name()
 
         Enum.each(config.servers, fn server ->
           Mix.shell().info("Removing #{version} from #{server}...")
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Relman.Remove do
         end)
 
       _ ->
-        Mix.raise("Usage: mix relman.remove VERSION")
+        Mix.raise("Usage: mix reldep.remove VERSION")
     end
   end
 end

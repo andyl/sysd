@@ -1,18 +1,18 @@
-defmodule Relman.MixProject do
+defmodule RelDep.MixProject do
   use Mix.Project
 
   @version "0.2.1"
 
   def project do
     [
-      app: :relman,
+      app: :reldep,
       version: @version,
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       licenses: ["MIT"],
       docs: docs(),
       package: [
-        name: "relman",
+        name: "reldep",
         licenses: ["MIT"],
         links: %{
           "GitHub" => "https://github.com/andyl/commit_hook",
@@ -34,7 +34,7 @@ defmodule Relman.MixProject do
     [
       main: "readme",
       extras: [{"README.md", title: "Overview"}],
-      source_url: "https://github.com/andyl/relman",
+      source_url: "https://github.com/andyl/release_deployer",
       source_ref: "v#{@version}"
     ]
   end

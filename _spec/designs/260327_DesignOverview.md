@@ -1,6 +1,6 @@
-# Relman Design Overview 
+# RelDep Design Overview 
 
-Relman is a minimalist tool for deploying Elixir Releases.
+RelDep is a minimalist tool for deploying Elixir Releases.
 
 ## Deploy Tool Comparison 
 
@@ -13,7 +13,7 @@ There are many deploy tools for Elixir Releases:
 These tools are great for production deployment in commercial environments, at
 the expense of complexity and learning-curve.
 
-Relman Use Case:
+RelDep Use Case:
 
 - Deploy on LAN Host 
 - Internal Apps, Prototyping 
@@ -24,7 +24,7 @@ Relman Use Case:
 
 ## Implementation 
 
-Relman will be built a tech stack including:
+RelDep will be built a tech stack including:
 
 - Elixir          | With common Elixir tooling
 - Elixir MixTasks | The CLI for all interaction
@@ -33,24 +33,24 @@ Relman will be built a tech stack including:
 - Systemd         | The management tool on remote servers
 
 ```
-Relman - Deploy Elixir releases to bare metal servers
+RelDep - Deploy Elixir releases to bare metal servers
 
 Mix Tasks:
-  mix relman                     This help message
-  mix relman.init                Generate config stubs
-  mix relman.sshcheck            Check SSH connection and permissions
-  mix relman.setup               Setup servers and deploy
-  mix relman.deploy              Deploy app to servers
-  mix relman.versions            List release versions on servers
-  mix relman.rollback [VERSION]  Rollback to a previous version
-  mix relman.remove [VERSION]    Remove old releases
-  mix relman.cleanup [SERVER]    Remove everything from server
+  mix reldep                     This help message
+  mix reldep.init                Generate config stubs
+  mix reldep.sshcheck            Check SSH connection and permissions
+  mix reldep.setup               Setup servers and deploy
+  mix reldep.deploy              Deploy app to servers
+  mix reldep.versions            List release versions on servers
+  mix reldep.rollback [VERSION]  Rollback to a previous version
+  mix reldep.remove [VERSION]    Remove old releases
+  mix reldep.cleanup [SERVER]    Remove everything from server
 ```
 
-**relman.init** 
+**reldep.init** 
 
-- create a default config file in config/relman.yaml 
-- create a systemd service file in priv/relman/<appname>.service
+- create a default config file in config/reldep.yaml 
+- create a systemd service file in priv/reldep/<appname>.service
 
 ```yaml
 servers: 
@@ -62,55 +62,55 @@ ssh:
 
 The service file should be an EEX template.
 
-**relman.sshcheck**
+**reldep.sshcheck**
 
 on all servers:
 - test ssh connection 
 - make sure the deploy user has sudo access 
-- make sure the deploy user can create /opt/relman 
+- make sure the deploy user can create /opt/reldep 
 
-**relman.setup** 
+**reldep.setup** 
 
 for each server: 
 - create service file /etc/systemd/services/<appname>.service
-- create /opt/relman 
+- create /opt/reldep 
 - deploy (see below)
 
-**relman.deploy**
+**reldep.deploy**
 - generate a new release `MIX_ENV=prod mix release`
 
 for each server:
-- copy the tar file to the remote server /opt/relman/<appname>/archives/<version>.tar 
-- untar the release file into /opt/relman/<appname>/releases/<version>
-- set the symlink /opt/relman/<appname>/current to point to /opt/relman/<appname>/releases/<version>
+- copy the tar file to the remote server /opt/reldep/<appname>/archives/<version>.tar 
+- untar the release file into /opt/reldep/<appname>/releases/<version>
+- set the symlink /opt/reldep/<appname>/current to point to /opt/reldep/<appname>/releases/<version>
 - start or restart the service `sudo systemctl <appname> start`
 
-**relman.versions** 
+**reldep.versions** 
 
 for each server: 
-- ls /opt/relman/<appname>/releases 
+- ls /opt/reldep/<appname>/releases 
 
-**relman.rollback**
+**reldep.rollback**
 
 get the <version> number
 
 for each server:
-- set the symlink /opt/relman/<appname>/current to point to /opt/relman/<appname>/releases/<version>
+- set the symlink /opt/reldep/<appname>/current to point to /opt/reldep/<appname>/releases/<version>
 - restart the service `system systemctl <appname> restart`
 
-**relman.remove** 
+**reldep.remove** 
 
 get the <version> number
 do not remove current version
 
 for each server:
-- remove /opt/relman/<appname>/releases/<version>
-- remove /opt/relman/<appname>/archives/<version>.tar 
+- remove /opt/reldep/<appname>/releases/<version>
+- remove /opt/reldep/<appname>/archives/<version>.tar 
 
-**relman.cleanup**
+**reldep.cleanup**
 
 for <server>:
-- remove server from config/relman.yaml 
+- remove server from config/reldep.yaml 
 - remove service file 
-- remove /opt/relman/<appname>
+- remove /opt/reldep/<appname>
 

@@ -1,12 +1,12 @@
-defmodule Relman.Publisher do
+defmodule RelDep.Publisher do
   @moduledoc """
-  Pluggable publisher behaviour and dispatch for `mix relman.release`.
+  Pluggable publisher behaviour and dispatch for `mix reldep.release`.
 
   A publisher is an external artifact store (GitHub Releases, an NFS
-  share, a local directory, ...) that relman can push a release
+  share, a local directory, ...) that reldep can push a release
   tarball to and later pull it back from. Publishers are declared as
-  an ordered list under `release.publish` in `config/relman.yaml` and
-  normalized into spec maps by `Relman.Config`.
+  an ordered list under `release.publish` in `config/reldep.yaml` and
+  normalized into spec maps by `RelDep.Config`.
 
   Each publisher implementation is a module implementing this
   behaviour. The three callbacks form a small contract:
@@ -16,7 +16,7 @@ defmodule Relman.Publisher do
       fast.
     * `publish/4` — upload or copy the tarball to the destination.
     * `fetch/4` — retrieve a previously published tarball into the
-      local build directory (used by `relman.deploy --from-release`).
+      local build directory (used by `reldep.deploy --from-release`).
 
   The `opts` on the spec map may include a `:replace` boolean — set
   by the task layer when `--replace` was passed on the CLI. Publisher
@@ -45,8 +45,8 @@ defmodule Relman.Publisher do
   Otherwise the `:type` atom is mapped to a concrete module.
   """
   def resolve(%{module: module}) when is_atom(module) and not is_nil(module), do: module
-  def resolve(%{type: :github}), do: Relman.Publisher.Github
-  def resolve(%{type: :file}), do: Relman.Publisher.File
+  def resolve(%{type: :github}), do: RelDep.Publisher.Github
+  def resolve(%{type: :file}), do: RelDep.Publisher.File
 
   def resolve(%{type: other}) do
     Mix.raise("No publisher implementation for type #{inspect(other)}")

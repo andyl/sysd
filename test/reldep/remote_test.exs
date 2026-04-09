@@ -1,9 +1,9 @@
-defmodule Relman.RemoteTest do
+defmodule RelDep.RemoteTest do
   use ExUnit.Case, async: true
 
   test "format_release_info/1 renders key=value lines in order" do
     body =
-      Relman.Remote.format_release_info(%{
+      RelDep.Remote.format_release_info(%{
         app: :myapp,
         version: "0.1.0",
         git_sha: "abc123",

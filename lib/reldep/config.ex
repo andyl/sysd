@@ -1,8 +1,8 @@
-defmodule Relman.Config do
+defmodule RelDep.Config do
   @moduledoc """
-  Reads, writes, and manipulates the Relman YAML configuration.
+  Reads, writes, and manipulates the RelDep YAML configuration.
 
-  The config file lives at `config/relman.yaml` in the consumer project
+  The config file lives at `config/reldep.yaml` in the consumer project
   and has this structure:
 
       servers:
@@ -40,13 +40,13 @@ defmodule Relman.Config do
 
   defstruct servers: [], ssh: %{}, release: %{publish: []}
 
-  @config_path "config/relman.yaml"
+  @config_path "config/reldep.yaml"
 
   @doc "Returns the path to the YAML config file."
   def config_path, do: @config_path
 
   @doc """
-  Load and parse the YAML config file into a `%Relman.Config{}` struct.
+  Load and parse the YAML config file into a `%RelDep.Config{}` struct.
 
   Raises a `Mix.Error` if the file does not exist.
   """
@@ -54,7 +54,7 @@ defmodule Relman.Config do
     path = @config_path
 
     unless File.exists?(path) do
-      Mix.raise("Config file not found: #{path}\nRun `mix relman.init` to generate it.")
+      Mix.raise("Config file not found: #{path}\nRun `mix reldep.init` to generate it.")
     end
 
     data = YamlElixir.read_from_file!(path)
@@ -62,7 +62,7 @@ defmodule Relman.Config do
   end
 
   @doc """
-  Normalize a raw YAML map into a `%Relman.Config{}` struct.
+  Normalize a raw YAML map into a `%RelDep.Config{}` struct.
 
   Exposed so tests (and callers that already have parsed YAML) can
   exercise the parsing rules without round-tripping through disk.
@@ -95,20 +95,20 @@ defmodule Relman.Config do
   end
 
   defp parse_publisher(%{"type" => other}) do
-    Mix.raise("Unknown publisher type in config/relman.yaml: #{inspect(other)}")
+    Mix.raise("Unknown publisher type in config/reldep.yaml: #{inspect(other)}")
   end
 
   defp parse_publisher(other) do
-    Mix.raise("Invalid publisher entry in config/relman.yaml: #{inspect(other)}")
+    Mix.raise("Invalid publisher entry in config/reldep.yaml: #{inspect(other)}")
   end
 
   @doc """
-  Write a `%Relman.Config{}` struct back to the YAML config file.
+  Write a `%RelDep.Config{}` struct back to the YAML config file.
 
   Creates the parent directory if it does not exist. Note: this does
   **not** round-trip the `release.publish` block. Any existing publisher
   configuration in the file on disk will be lost. Only the fields that
-  relman manages programmatically (servers, ssh) are rewritten.
+  reldep manages programmatically (servers, ssh) are rewritten.
   """
   def write(%__MODULE__{} = config) do
     yaml =
@@ -126,7 +126,7 @@ defmodule Relman.Config do
   @doc """
   Remove a server from the config and write the updated file.
 
-  Returns the updated `%Relman.Config{}` struct.
+  Returns the updated `%RelDep.Config{}` struct.
   """
   def remove_server(%__MODULE__{} = config, server) do
     updated = %{config | servers: Enum.reject(config.servers, &(&1 == server))}

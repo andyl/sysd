@@ -1,4 +1,4 @@
-defmodule Relman.Publisher.Github do
+defmodule RelDep.Publisher.Github do
   @moduledoc """
   Publisher that uploads a release tarball to GitHub Releases via
   the `gh` CLI.
@@ -38,13 +38,13 @@ defmodule Relman.Publisher.Github do
   the expected local build directory.
   """
 
-  @behaviour Relman.Publisher
+  @behaviour RelDep.Publisher
 
-  alias Relman.Publisher.Github.Util
+  alias RelDep.Publisher.Github.Util
 
   @impl true
   def preflight(spec) do
-    version = Relman.version()
+    version = RelDep.version()
     tag = "v#{version}"
 
     with :ok <- check_gh_installed(),
@@ -77,7 +77,7 @@ defmodule Relman.Publisher.Github do
   end
 
   defp check_tag(tag) do
-    if Relman.git_tag_exists?(tag),
+    if RelDep.git_tag_exists?(tag),
       do: :ok,
       else: {:error, "git tag #{tag} does not exist locally"}
   end
@@ -159,7 +159,7 @@ defmodule Relman.Publisher.Github do
   end
 end
 
-defmodule Relman.Publisher.Github.Util do
+defmodule RelDep.Publisher.Github.Util do
   @moduledoc false
 
   @doc """

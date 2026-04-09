@@ -1,0 +1,52 @@
+defmodule Mix.Tasks.Reldep.Setup do
+  @shortdoc "Setup servers for deployment"
+
+  @moduledoc """
+  Perform first-time server setup on all configured servers.
+
+      $ mix reldep.setup
+
+  For each server listed in `config/reldep.yaml`, this task will:
+
+    1. Create the remote directory structure at `/opt/reldep/<appname>/`
+    2. Install the systemd service file from `priv/reldep/<appname>.service`
+    3. Enable the systemd service
+
+  Run `mix reldep.init` first to generate the config and service files,
+  then `mix reldep.sshcheck` to validate connectivity.
+
+  After setup completes, run `mix reldep.deploy` to perform your first
+  deployment.
+  """
+  use Mix.Task
+
+  alias RelDep.{Config, SSH, Remote}
+
+  @impl Mix.Task
+  def run(_args) do
+    config = Config.load()
+    app_name = RelDep.app_name()
+
+    service_path = "priv/reldep/#{app_name}.service"
+
+    unless File.exists?(service_path) do
+      Mix.raise("Service file not found: #{service_path}\nRun `mix reldep.init` first.")
+    end
+
+    service_content = File.read!(service_path)
+
+    Enum.each(config.servers, fn server ->
+      Mix.shell().info("Setting up #{server}...")
+
+      {:ok, conn} = SSH.connect(server, config.ssh)
+
+      Remote.setup_dirs(conn, app_name)
+      Mix.shell().info("  Created directory structure")
+
+      Remote.install_service(conn, app_name, service_content)
+      Mix.shell().info("  Installed systemd service")
+    end)
+
+    Mix.shell().info("\nSetup complete. Run `mix reldep.deploy` to deploy your app.")
+  end
+end

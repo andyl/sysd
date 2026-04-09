@@ -1,14 +1,14 @@
-defmodule Relman.Publisher.FileTest do
+defmodule RelDep.Publisher.FileTest do
   use ExUnit.Case, async: true
 
-  alias Relman.Publisher.File, as: FilePub
+  alias RelDep.Publisher.File, as: FilePub
 
   @app :myapp
   @version "0.1.0"
   @tar_basename "myapp-0.1.0.tar.gz"
 
   setup do
-    tmp = System.tmp_dir!() |> Path.join("relman_file_test_#{System.unique_integer([:positive])}")
+    tmp = System.tmp_dir!() |> Path.join("reldep_file_test_#{System.unique_integer([:positive])}")
     File.mkdir_p!(tmp)
     dest = Path.join(tmp, "dest")
     File.mkdir_p!(dest)

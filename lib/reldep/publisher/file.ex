@@ -1,4 +1,4 @@
-defmodule Relman.Publisher.File do
+defmodule RelDep.Publisher.File do
   @moduledoc """
   Publisher that copies the release tarball to a local or mounted
   filesystem directory.
@@ -26,7 +26,7 @@ defmodule Relman.Publisher.File do
   `fetch/4` copies the same file back into the expected build location.
   """
 
-  @behaviour Relman.Publisher
+  @behaviour RelDep.Publisher
 
   @impl true
   def preflight(%{path: nil}), do: {:error, "`path` is required"}
@@ -64,7 +64,7 @@ defmodule Relman.Publisher.File do
   end
 
   defp writable?(path) do
-    probe = Path.join(path, ".relman_write_probe")
+    probe = Path.join(path, ".reldep_write_probe")
 
     case File.write(probe, "") do
       :ok ->

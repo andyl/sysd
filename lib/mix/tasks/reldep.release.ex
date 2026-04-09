@@ -1,16 +1,16 @@
-defmodule Mix.Tasks.Relman.Release do
+defmodule Mix.Tasks.Reldep.Release do
   @shortdoc "Build a release tarball and optionally publish it"
 
   @moduledoc """
   Build a production release tarball for the current project and
   optionally publish it to each configured publisher.
 
-      $ MIX_ENV=prod mix relman.release
+      $ MIX_ENV=prod mix reldep.release
 
   ## Behavior
 
     1. Verify that the git tag `v<@version>` exists locally. Fail if
-       not. Relman does not create tags — that is `git_ops`' job.
+       not. RelDep does not create tags — that is `git_ops`' job.
     2. Run preflight checks for every configured publisher **before**
        building, so misconfiguration fails fast.
     3. If a tarball for the current `@version` already exists locally,
@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Relman.Release do
     * `--no-publish` — build only; skip all configured publishers.
 
   Publisher configuration lives under `release.publish` in
-  `config/relman.yaml`. Omitting the key results in a local build with
+  `config/reldep.yaml`. Omitting the key results in a local build with
   no upload.
   """
   use Mix.Task
@@ -44,13 +44,13 @@ defmodule Mix.Tasks.Relman.Release do
     replace? = Keyword.get(opts, :replace, false)
     publish? = not Keyword.get(opts, :no_publish, false)
 
-    config = Relman.Config.load()
-    app_name = Relman.app_name()
-    version = Relman.version()
-    tag = Relman.version_tag()
-    publishers = Relman.Config.publishers(config)
+    config = RelDep.Config.load()
+    app_name = RelDep.app_name()
+    version = RelDep.version()
+    tag = RelDep.version_tag()
+    publishers = RelDep.Config.publishers(config)
 
-    unless Relman.git_tag_exists?(tag) do
+    unless RelDep.git_tag_exists?(tag) do
       Mix.raise("""
       git tag #{tag} does not exist locally.
       Run `mix git_ops.release` to bump the version and create the tag.
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Relman.Release do
     if publish? and publishers != [] do
       Mix.shell().info("Running publisher preflight checks...")
 
-      case Relman.Publisher.preflight_all(publishers, replace: replace?) do
+      case RelDep.Publisher.preflight_all(publishers, replace: replace?) do
         :ok ->
           :ok
 
@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Relman.Release do
       end
     end
 
-    tar_path = Relman.release_tar_path()
+    tar_path = RelDep.release_tar_path()
 
     cond do
       File.exists?(tar_path) and not force? ->
@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Relman.Release do
     if publish? and publishers != [] do
       Mix.shell().info("Publishing #{app_name} #{version}...")
 
-      case Relman.Publisher.publish_all(publishers, tar_path, app_name, version,
+      case RelDep.Publisher.publish_all(publishers, tar_path, app_name, version,
              replace: replace?
            ) do
         {:ok, urls} ->

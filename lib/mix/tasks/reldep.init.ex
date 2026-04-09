@@ -1,22 +1,22 @@
-defmodule Mix.Tasks.Relman.Init do
+defmodule Mix.Tasks.Reldep.Init do
   @shortdoc "Generate config stubs"
 
   @moduledoc """
-  Generate Relman configuration files for your project.
+  Generate RelDep configuration files for your project.
 
-      $ mix relman.init
+      $ mix reldep.init
 
   Creates the following files if they do not already exist:
 
-    * `config/relman.yaml` — server list and SSH settings
-    * `priv/relman/<appname>.service` — systemd unit file
+    * `config/reldep.yaml` — server list and SSH settings
+    * `priv/reldep/<appname>.service` — systemd unit file
 
   The YAML config is pre-filled with a placeholder server and a default
   `deploy` user. Edit it to match your environment before running
-  `mix relman.sshcheck`.
+  `mix reldep.sshcheck`.
 
   The systemd service file is rendered from an EEX template and can be
-  customized before running `mix relman.setup`.
+  customized before running `mix reldep.setup`.
 
   Existing files are never overwritten.
   """
@@ -24,9 +24,9 @@ defmodule Mix.Tasks.Relman.Init do
 
   @impl Mix.Task
   def run(_args) do
-    app_name = Relman.app_name()
-    config_path = Relman.Config.config_path()
-    service_path = "priv/relman/#{app_name}.service"
+    app_name = RelDep.app_name()
+    config_path = RelDep.Config.config_path()
+    service_path = "priv/reldep/#{app_name}.service"
     user_name = System.get_env("USER")
 
     if File.exists?(config_path) do
@@ -60,9 +60,9 @@ defmodule Mix.Tasks.Relman.Init do
       Mix.shell().info("Service file already exists: #{service_path}")
     else
       template_path =
-        :relman
+        :reldep
         |> :code.priv_dir()
-        |> Path.join("relman/templates/app.service.eex")
+        |> Path.join("reldep/templates/app.service.eex")
 
       content = EEx.eval_file(template_path, app_name: app_name, user: user_name)
 

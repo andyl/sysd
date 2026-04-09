@@ -1,12 +1,12 @@
 # Release & Publish Design
 
-Splits the current `mix relman.deploy` into two tasks and adds optional
+Splits the current `mix reldep.deploy` into two tasks and adds optional
 publishing of release tarballs to external artifact stores (GitHub
 Releases first, with a pluggable shape for S3/SCP/etc. later).
 
 ## Motivation
 
-Today `mix relman.deploy` does two unrelated things: it builds a
+Today `mix reldep.deploy` does two unrelated things: it builds a
 release tarball and it pushes that tarball to the configured servers.
 Splitting these gives us a clean "produce artifact" vs. "install
 artifact" seam, matching standard CI/CD flow. It also opens the door to
@@ -15,7 +15,7 @@ previously published artifact from GitHub Releases.
 
 ## Task Split
 
-**`mix relman.release`** — build the tarball, optionally publish it.
+**`mix reldep.release`** — build the tarball, optionally publish it.
 
 1. Verify `v<@version>` git tag exists locally (created by `mix
    git_ops.release`). Fail if not — relman stays out of the versioning
@@ -23,14 +23,14 @@ previously published artifact from GitHub Releases.
 2. If the tarball for `@version` already exists locally, skip the build
    unless `--force` is passed.
 3. Otherwise run `mix assets.deploy` and `MIX_ENV=prod mix release`.
-4. For each publisher configured in `relman.yaml`, run its preflight
+4. For each publisher configured in `reldep.yaml`, run its preflight
    checks, then upload the tarball. Fail fast on the first publisher
    error unless `--replace` is passed (see idempotency below).
 
-**`mix relman.deploy`** — push an existing tarball to servers.
+**`mix reldep.deploy`** — push an existing tarball to servers.
 
 1. If the tarball for `@version` is not present locally, invoke
-   `mix relman.release` first (i.e. build locally — this is the
+   `mix reldep.release` first (i.e. build locally — this is the
    default).
 2. With `--from-release`, instead download the tarball for `@version`
    from the first configured publisher that supports fetching (GitHub
@@ -39,7 +39,7 @@ previously published artifact from GitHub Releases.
 3. For each server: upload, extract, flip symlink, restart service
    (unchanged from current behavior).
 4. Write a `RELEASE_INFO` file into
-   `/opt/relman/<app>/releases/<version>/` recording:
+   `/opt/reldep/<app>/releases/<version>/` recording:
    - git sha
    - build host + timestamp
    - publisher URL if the artifact came from one
@@ -104,7 +104,7 @@ already have it installed.
 
 **Upload**: `gh release create v<@version> <tarball> --title ... [--draft] [--prerelease]`.
 
-**Fetch** (for `relman.deploy --from-release`):
+**Fetch** (for `reldep.deploy --from-release`):
 `gh release download v<@version> --pattern '<app>-<version>.tar.gz' --dir _build/prod/rel/<app>/`.
 
 **Release notes**: TBD. The two candidates are the `v<@version>` tag's
@@ -137,7 +137,7 @@ by a static web server, or just a local archive folder.
 **Upload**: `File.cp!/2` the tarball to
 `<path>/<app>-<version>.tar.gz`. That's the whole thing.
 
-**Fetch** (for `relman.deploy --from-release`): copy the file back
+**Fetch** (for `reldep.deploy --from-release`): copy the file back
 from `<path>/<app>-<version>.tar.gz` into the expected local build
 location.
 
@@ -149,28 +149,28 @@ Both publishers implement the same small internal contract — roughly:
 - `publish(config, tarball_path, app, version) :: :ok | {:error, reason}`
 - `fetch(config, app, version, dest_dir) :: :ok | {:error, reason}`
 
-This keeps the `relman.release` / `relman.deploy` task code free of
+This keeps the `reldep.release` / `reldep.deploy` task code free of
 per-publisher branching and makes adding a third publisher a matter
 of implementing the contract.
 
 ## Idempotency
 
-- Re-running `relman.release` for the same `@version`:
+- Re-running `reldep.release` for the same `@version`:
   - Build step is a no-op if the tarball exists (unless `--force`).
   - Publish step errors if an artifact for `v<@version>` already
     exists at any configured publisher (unless `--replace`, which
     deletes/overwrites).
-- Re-running `relman.deploy` for the same `@version` is already
+- Re-running `reldep.deploy` for the same `@version` is already
   idempotent at the server level and stays that way.
 
 ## Flags Summary
 
 | Task             | Flag             | Effect                                            |
 |------------------|------------------|---------------------------------------------------|
-| `relman.release` | `--force`        | Rebuild tarball even if one exists for `@version` |
-| `relman.release` | `--replace`      | Delete and recreate an existing GH release        |
-| `relman.release` | `--no-publish`   | Build only, skip all configured publishers       |
-| `relman.deploy`  | `--from-release` | Pull tarball from publisher instead of building   |
+| `reldep.release` | `--force`        | Rebuild tarball even if one exists for `@version` |
+| `reldep.release` | `--replace`      | Delete and recreate an existing GH release        |
+| `reldep.release` | `--no-publish`   | Build only, skip all configured publishers       |
+| `reldep.deploy`  | `--from-release` | Pull tarball from publisher instead of building   |
 
 ## Flow
 
@@ -178,15 +178,15 @@ Typical release cycle:
 
 ```
 mix git_ops.release     # bump version, create v<x.y.z> tag
-mix relman.release      # build tarball, publish to GH Releases
-mix relman.deploy       # push to servers (uses local tarball)
+mix reldep.release      # build tarball, publish to GH Releases
+mix reldep.deploy       # push to servers (uses local tarball)
 ```
 
 Deploy from a fresh checkout (no local build artifacts):
 
 ```
 git checkout v0.3.0
-mix relman.deploy --from-release   # fetches from GH, pushes to servers
+mix reldep.deploy --from-release   # fetches from GH, pushes to servers
 ```
 
 ## Out of Scope

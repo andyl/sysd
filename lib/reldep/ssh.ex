@@ -1,4 +1,4 @@
-defmodule Relman.SSH do
+defmodule RelDep.SSH do
   @moduledoc """
   SSH connectivity layer wrapping SSHEx and Erlang's `:ssh_sftp`.
 

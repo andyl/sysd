@@ -58,4 +58,4 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Features:
 
-* implement all Relman Mix tasks for deployment lifecycle by andyl
+* implement all RelDep Mix tasks for deployment lifecycle by andyl

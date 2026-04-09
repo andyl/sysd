@@ -1,35 +1,35 @@
-defmodule Mix.Tasks.Relman.Deploy do
+defmodule Mix.Tasks.Reldep.Deploy do
   @shortdoc "Deploy an existing release tarball to servers"
 
   @moduledoc """
   Push an existing release tarball to each configured server.
 
-      $ MIX_ENV=prod mix relman.deploy
-      $ MIX_ENV=prod mix relman.deploy --from-release
+      $ MIX_ENV=prod mix reldep.deploy
+      $ MIX_ENV=prod mix reldep.deploy --from-release
 
   ## Behavior
 
     1. If no local tarball exists for `@version`, invoke
-       `mix relman.release` to build one (the default path). This
+       `mix reldep.release` to build one (the default path). This
        will also run any configured publishers — pass
-       `--no-publish` to `relman.release` directly if that is not
+       `--no-publish` to `reldep.release` directly if that is not
        desired.
     2. With `--from-release`, instead fetch the tarball for
        `@version` from the first configured publisher that supports
        fetching. This enables deploying from a machine that did not
        build the artifact.
-    3. For each server in `config/relman.yaml`:
-       - Upload the tarball to `/opt/relman/<appname>/archives/<version>.tar.gz`
-       - Extract it to `/opt/relman/<appname>/releases/<version>/`
-       - Update the `/opt/relman/<appname>/current` symlink
+    3. For each server in `config/reldep.yaml`:
+       - Upload the tarball to `/opt/reldep/<appname>/archives/<version>.tar.gz`
+       - Extract it to `/opt/reldep/<appname>/releases/<version>/`
+       - Update the `/opt/reldep/<appname>/current` symlink
        - Start or restart the systemd service
-       - Write `/opt/relman/<appname>/releases/<version>/RELEASE_INFO`
+       - Write `/opt/reldep/<appname>/releases/<version>/RELEASE_INFO`
          recording the git sha, build host, timestamp, and (if used)
          the publisher URL.
 
   The service will be briefly offline during the deploy.
 
-  Run `mix relman.setup` before your first deployment to prepare the
+  Run `mix reldep.setup` before your first deployment to prepare the
   remote servers.
 
   ## Flags
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Relman.Deploy do
   """
   use Mix.Task
 
-  alias Relman.{Config, SSH, Remote}
+  alias RelDep.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(args) do
@@ -47,9 +47,9 @@ defmodule Mix.Tasks.Relman.Deploy do
     from_release? = Keyword.get(opts, :from_release, false)
 
     config = Config.load()
-    app_name = Relman.app_name()
-    version = Relman.version()
-    tar_path = Relman.release_tar_path()
+    app_name = RelDep.app_name()
+    version = RelDep.version()
+    tar_path = RelDep.release_tar_path()
     publishers = Config.publishers(config)
 
     publisher_url =
@@ -61,8 +61,8 @@ defmodule Mix.Tasks.Relman.Deploy do
           fetch_from_publisher(publishers, app_name, version, tar_path)
 
         true ->
-          Mix.shell().info("No local tarball for #{version}; invoking `mix relman.release`...")
-          Mix.Task.run("relman.release", [])
+          Mix.shell().info("No local tarball for #{version}; invoking `mix reldep.release`...")
+          Mix.Task.run("reldep.release", [])
           nil
       end
 
@@ -73,8 +73,8 @@ defmodule Mix.Tasks.Relman.Deploy do
     release_info = %{
       app: app_name,
       version: version,
-      git_sha: Relman.git_sha(),
-      build_host: Relman.build_host(),
+      git_sha: RelDep.git_sha(),
+      build_host: RelDep.build_host(),
       build_timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
       publisher_url: publisher_url
     }
@@ -91,14 +91,14 @@ defmodule Mix.Tasks.Relman.Deploy do
   end
 
   defp fetch_from_publisher([], _app, _version, _tar_path) do
-    Mix.raise("--from-release was passed but no publishers are configured in config/relman.yaml")
+    Mix.raise("--from-release was passed but no publishers are configured in config/reldep.yaml")
   end
 
   defp fetch_from_publisher(publishers, app_name, version, tar_path) do
     dest_dir = Path.dirname(tar_path)
     Mix.shell().info("Fetching #{app_name} #{version} from configured publishers...")
 
-    case Relman.Publisher.fetch_first(publishers, app_name, version, dest_dir) do
+    case RelDep.Publisher.fetch_first(publishers, app_name, version, dest_dir) do
       {:ok, url} ->
         if url, do: Mix.shell().info("  fetched: #{url}")
         url

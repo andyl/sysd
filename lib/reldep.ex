@@ -1,6 +1,6 @@
-defmodule Relman do
+defmodule RelDep do
   @moduledoc """
-  Helpers and path constants for Relman deployments.
+  Helpers and path constants for RelDep deployments.
 
   Provides the remote directory layout used on target servers and
   convenience functions for deriving application metadata from the
@@ -8,18 +8,18 @@ defmodule Relman do
 
   ## Remote Directory Layout
 
-      /opt/relman/<appname>/
+      /opt/reldep/<appname>/
         archives/<version>.tar.gz
         releases/<version>/
         current -> releases/<version>
 
-  Each application gets its own subdirectory under `/opt/relman/`,
+  Each application gets its own subdirectory under `/opt/reldep/`,
   allowing multiple apps to be deployed on the same server.
   """
 
-  @base_path "/opt/relman"
+  @base_path "/opt/reldep"
 
-  @doc "Root path for all Relman files on the remote server."
+  @doc "Root path for all RelDep files on the remote server."
   def base_path, do: @base_path
 
   @doc "Per-application root path on the remote server."

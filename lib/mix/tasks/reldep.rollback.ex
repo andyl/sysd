@@ -1,30 +1,30 @@
-defmodule Mix.Tasks.Relman.Rollback do
+defmodule Mix.Tasks.Reldep.Rollback do
   @shortdoc "Rollback to a previous version"
 
   @moduledoc """
   Roll back to a previously deployed release version.
 
-      $ mix relman.rollback VERSION
+      $ mix reldep.rollback VERSION
 
-  For each server in `config/relman.yaml`, this task will:
+  For each server in `config/reldep.yaml`, this task will:
 
-    1. Update the `/opt/relman/<appname>/current` symlink to point to
-       `/opt/relman/<appname>/releases/<VERSION>`
+    1. Update the `/opt/reldep/<appname>/current` symlink to point to
+       `/opt/reldep/<appname>/releases/<VERSION>`
     2. Restart the systemd service
 
   The target version must already exist on the server. Use
-  `mix relman.versions` to see available versions.
+  `mix reldep.versions` to see available versions.
   """
   use Mix.Task
 
-  alias Relman.{Config, SSH, Remote}
+  alias RelDep.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(args) do
     case args do
       [version] ->
         config = Config.load()
-        app_name = Relman.app_name()
+        app_name = RelDep.app_name()
 
         Enum.each(config.servers, fn server ->
           Mix.shell().info("Rolling back #{server} to #{version}...")
@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Relman.Rollback do
         end)
 
       _ ->
-        Mix.raise("Usage: mix relman.rollback VERSION")
+        Mix.raise("Usage: mix reldep.rollback VERSION")
     end
   end
 end

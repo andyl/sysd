@@ -1,24 +1,24 @@
-defmodule Mix.Tasks.Relman.Versions do
+defmodule Mix.Tasks.Reldep.Versions do
   @shortdoc "List release versions on servers"
 
   @moduledoc """
   List deployed release versions on all configured servers.
 
-      $ mix relman.versions
+      $ mix reldep.versions
 
-  For each server in `config/relman.yaml`, lists every version found
-  under `/opt/relman/<appname>/releases/`. The currently active version (the
-  target of the `/opt/relman/<appname>/current` symlink) is marked with
+  For each server in `config/reldep.yaml`, lists every version found
+  under `/opt/reldep/<appname>/releases/`. The currently active version (the
+  target of the `/opt/reldep/<appname>/current` symlink) is marked with
   `(current)`.
   """
   use Mix.Task
 
-  alias Relman.{Config, SSH, Remote}
+  alias RelDep.{Config, SSH, Remote}
 
   @impl Mix.Task
   def run(_args) do
     config = Config.load()
-    app_name = Relman.app_name()
+    app_name = RelDep.app_name()
 
     Enum.each(config.servers, fn server ->
       Mix.shell().info("#{server}:")

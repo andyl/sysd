@@ -1,26 +1,27 @@
-defmodule Relman.Publisher.GithubTest do
+defmodule RelDep.Publisher.GithubTest do
   use ExUnit.Case, async: true
 
-  alias Relman.Publisher.Github.Util
+  alias RelDep.Publisher.Github.Util
 
   describe "origin_repo/1" do
     test "parses an https URL without .git" do
-      assert {:ok, "andyl/relman"} =
-               Util.origin_repo("https://github.com/andyl/relman")
+      assert {:ok, "andyl/release_deployer"} =
+               Util.origin_repo("https://github.com/andyl/release_deployer")
     end
 
     test "parses an https URL with .git" do
-      assert {:ok, "andyl/relman"} =
-               Util.origin_repo("https://github.com/andyl/relman.git")
+      assert {:ok, "andyl/release_deployer"} =
+               Util.origin_repo("https://github.com/andyl/release_deployer.git")
     end
 
     test "parses a git@ ssh URL without .git" do
-      assert {:ok, "andyl/relman"} = Util.origin_repo("git@github.com:andyl/relman")
+      assert {:ok, "andyl/release_deployer"} =
+               Util.origin_repo("git@github.com:andyl/release_deployer")
     end
 
     test "parses a git@ ssh URL with .git" do
-      assert {:ok, "andyl/relman"} =
-               Util.origin_repo("git@github.com:andyl/relman.git")
+      assert {:ok, "andyl/release_deployer"} =
+               Util.origin_repo("git@github.com:andyl/release_deployer.git")
     end
 
     test "strips surrounding whitespace" do

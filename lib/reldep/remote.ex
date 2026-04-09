@@ -1,18 +1,18 @@
-defmodule Relman.Remote do
+defmodule RelDep.Remote do
   @moduledoc """
   High-level operations on a remote server over an SSH connection.
 
   Each function takes an open SSH connection (as returned by
-  `Relman.SSH.connect/2`) and performs one or more commands on the
+  `RelDep.SSH.connect/2`) and performs one or more commands on the
   remote host. These are the building blocks used by the Mix tasks.
   """
 
-  alias Relman.SSH
+  alias RelDep.SSH
 
-  @doc "Create the `/opt/relman/<appname>/{archives,releases}` directory structure."
+  @doc "Create the `/opt/reldep/<appname>/{archives,releases}` directory structure."
   def setup_dirs(conn, app_name) do
-    SSH.run!(conn, "sudo mkdir -p #{Relman.archives_path(app_name)}")
-    SSH.run!(conn, "sudo mkdir -p #{Relman.releases_path(app_name)}")
+    SSH.run!(conn, "sudo mkdir -p #{RelDep.archives_path(app_name)}")
+    SSH.run!(conn, "sudo mkdir -p #{RelDep.releases_path(app_name)}")
   end
 
   @doc "Write a systemd service file, reload systemd, and enable the service."
@@ -28,8 +28,8 @@ defmodule Relman.Remote do
 
   @doc "Upload a release tarball, extract it, update the symlink, and start/restart the service."
   def deploy(conn, app_name, local_tar_path, version) do
-    remote_archive = "#{Relman.archives_path(app_name)}/#{version}.tar.gz"
-    remote_release = "#{Relman.releases_path(app_name)}/#{version}"
+    remote_archive = "#{RelDep.archives_path(app_name)}/#{version}.tar.gz"
+    remote_release = "#{RelDep.releases_path(app_name)}/#{version}"
 
     tmp_archive = "/tmp/#{app_name}-#{version}.tar.gz"
     SSH.upload(conn, local_tar_path, tmp_archive)
@@ -37,7 +37,7 @@ defmodule Relman.Remote do
 
     SSH.run!(conn, "sudo mkdir -p #{remote_release}")
     SSH.run!(conn, "sudo tar -xzf #{remote_archive} -C #{remote_release}")
-    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Relman.current_path(app_name)}")
+    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{RelDep.current_path(app_name)}")
 
     case SSH.run(conn, "sudo systemctl is-active #{app_name}") do
       {:ok, _, 0} ->
@@ -56,7 +56,7 @@ defmodule Relman.Remote do
   """
   def write_release_info(conn, app_name, version, info) when is_map(info) do
     body = format_release_info(info)
-    release_dir = "#{Relman.releases_path(app_name)}/#{version}"
+    release_dir = "#{RelDep.releases_path(app_name)}/#{version}"
     remote_path = "#{release_dir}/RELEASE_INFO"
     tmp_path = "/tmp/#{app_name}-#{version}-RELEASE_INFO"
 
@@ -78,7 +78,7 @@ defmodule Relman.Remote do
 
   @doc "List all release versions present on the remote server."
   def list_versions(conn, app_name) do
-    case SSH.run(conn, "ls #{Relman.releases_path(app_name)}") do
+    case SSH.run(conn, "ls #{RelDep.releases_path(app_name)}") do
       {:ok, output, 0} ->
         output |> String.trim() |> String.split("\n", trim: true)
 
@@ -89,7 +89,7 @@ defmodule Relman.Remote do
 
   @doc "Return the currently active version by reading the `current` symlink, or `nil`."
   def current_version(conn, app_name) do
-    case SSH.run(conn, "readlink #{Relman.current_path(app_name)}") do
+    case SSH.run(conn, "readlink #{RelDep.current_path(app_name)}") do
       {:ok, output, 0} -> output |> String.trim() |> Path.basename()
       _ -> nil
     end
@@ -97,8 +97,8 @@ defmodule Relman.Remote do
 
   @doc "Switch the `current` symlink to the given version and restart the service."
   def rollback(conn, app_name, version) do
-    remote_release = "#{Relman.releases_path(app_name)}/#{version}"
-    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{Relman.current_path(app_name)}")
+    remote_release = "#{RelDep.releases_path(app_name)}/#{version}"
+    SSH.run!(conn, "sudo ln -sfn #{remote_release} #{RelDep.current_path(app_name)}")
     SSH.run!(conn, "sudo systemctl restart #{app_name}")
   end
 
@@ -110,16 +110,16 @@ defmodule Relman.Remote do
       Mix.raise("Cannot remove the currently active version: #{version}")
     end
 
-    SSH.run!(conn, "sudo rm -rf #{Relman.releases_path(app_name)}/#{version}")
-    SSH.run!(conn, "sudo rm -f #{Relman.archives_path(app_name)}/#{version}.tar.gz")
+    SSH.run!(conn, "sudo rm -rf #{RelDep.releases_path(app_name)}/#{version}")
+    SSH.run!(conn, "sudo rm -f #{RelDep.archives_path(app_name)}/#{version}.tar.gz")
   end
 
-  @doc "Stop the service, remove the service file, and delete all Relman files from the server."
+  @doc "Stop the service, remove the service file, and delete all RelDep files from the server."
   def cleanup(conn, app_name) do
     SSH.run(conn, "sudo systemctl stop #{app_name}")
     SSH.run(conn, "sudo systemctl disable #{app_name}")
     SSH.run(conn, "sudo rm -f /etc/systemd/system/#{app_name}.service")
     SSH.run(conn, "sudo systemctl daemon-reload")
-    SSH.run!(conn, "sudo rm -rf #{Relman.app_path(app_name)}")
+    SSH.run!(conn, "sudo rm -rf #{RelDep.app_path(app_name)}")
   end
 end
