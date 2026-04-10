@@ -167,11 +167,11 @@ defmodule Sysd.Config do
   Return the systemd service names for a host.
 
   With instances: `["sysd_inst1", "sysd_inst2"]`.
-  Without instances (legacy): `[app_name]`.
+  Without instances (legacy): `["sysd_<app_name>"]`.
   """
   def service_names(%__MODULE__{} = config, host, app_name) do
     case instances_for_host(config, host) do
-      [] -> [to_string(app_name)]
+      [] -> ["sysd_#{app_name}"]
       instances -> Enum.map(instances, &"sysd_#{&1.name}")
     end
   end

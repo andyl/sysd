@@ -242,7 +242,7 @@ defmodule Sysd.ConfigTest do
 
     test "returns app name for a legacy host" do
       config = %Sysd.Config{servers: ["host1"], instances: %{}}
-      assert Sysd.Config.service_names(config, "host1", "myapp") == ["myapp"]
+      assert Sysd.Config.service_names(config, "host1", "myapp") == ["sysd_myapp"]
     end
   end
 

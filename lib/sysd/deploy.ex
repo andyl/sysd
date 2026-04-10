@@ -325,8 +325,9 @@ defmodule Sysd.Deploy do
       instances = if config, do: Sysd.Config.instances_for_host(config, host), else: []
 
       if instances == [] do
+        service_name = "sysd_#{app}"
         service_content = Systemd.render(%{app: app, user: user})
-        Remote.install_service(conn, app, service_content)
+        Remote.install_service(conn, service_name, service_content)
       else
         Enum.each(instances, fn instance ->
           service_name = "sysd_#{instance.name}"
@@ -354,7 +355,7 @@ defmodule Sysd.Deploy do
         Sysd.Config.service_names(config, host, app)
 
       true ->
-        [to_string(app)]
+        ["sysd_#{app}"]
     end
   end
 
